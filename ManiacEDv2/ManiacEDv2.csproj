@@ -273,6 +273,12 @@
   <ItemGroup>
     <Resource Include="64x64.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RSDK-Reverse\RSDKv5\RSDKv5.csproj">
+      <Project>{cf5496f8-002b-408f-9b3d-67c88f610283}</Project>
+      <Name>RSDKv5</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\SkiaSharp.1.68.0\build\net45\SkiaSharp.targets" Condition="Exists('..\packages\SkiaSharp.1.68.0\build\net45\SkiaSharp.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
