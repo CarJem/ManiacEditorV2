@@ -1,0 +1,32 @@
+﻿<Application x:Class="ManiacEDv2.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:ManiacEDv2">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/ColorLibrary.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/IconLibrary.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/CheckboxStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/NumericUpDownStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/ButtonStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/ItemContainerStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/MenuItemContextStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/FlatButtonStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/ColorPickerStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/ToolkitMiscStyles.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/ExpanderStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/TextBoxStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/SplitButtonStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/TabItemStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/ComboBoxStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/ScrollBarStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/ScrollViewerStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/ListViewStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/RepeatButtonStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/ToolbarStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/ManiacEDv2;component/UI Element Styles/SliderStyle.xaml"></ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

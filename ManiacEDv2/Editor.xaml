@@ -1,0 +1,976 @@
+﻿<Window x:Name="EditorViewWPF" x:Class="ManiacEDv2.Editor"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="clr-namespace:System.Windows.Interop;assembly=PresentationCore"
+        xmlns:in="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:wpfTool="clr-namespace:Xceed.Wpf.Toolkit;assembly=Xceed.Wpf.Toolkit"        
+        xmlns:render="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"  
+        xmlns:local="clr-namespace:ManiacEDv2"
+        mc:Ignorable="d"    
+        Title="ManiacEDv2 Rendering Test" Height="759" Width="1184" MinWidth="1184" MinHeight="759" SizeChanged="EditorViewWPF_SizeChanged" Closed="EditorViewWPF_Closed">
+    <Grid x:Name="ParentGrid" MouseWheel="DevicePanel_MouseWheel" Background="{DynamicResource NormalBackground}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="100"/>
+            <RowDefinition Height="533*"/>
+            <RowDefinition Height="35"/>
+            <RowDefinition Height="35"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="169*"/>
+            <ColumnDefinition Width="118*"/>
+            <ColumnDefinition Width="604*"/>
+            <ColumnDefinition Width="286*"/>
+        </Grid.ColumnDefinitions>
+
+
+
+
+        <StatusBar x:Name="StatusBar1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.ColumnSpan="4" Height="35" Grid.Row="3" BorderThickness="1" Foreground="{StaticResource NormalText}" Background="{DynamicResource StatusBarBackground}" BorderBrush="{DynamicResource ContextMenuBorder}">
+            <Label x:Name="positionLabel" Foreground="{StaticResource NormalText}"/>
+            <Separator x:Name="seperator1" Visibility="Collapsed"/>
+            <Label x:Name="selectedPositionLabel" Foreground="{StaticResource NormalText}"/>
+            <Separator x:Name="seperator2" Visibility="Collapsed"/>
+            <Label x:Name="selectionSizeLabel" Foreground="{StaticResource NormalText}"/>
+            <Separator x:Name="seperator3" Visibility="Collapsed"/>
+            <Label x:Name="selectionBoxSizeLabel" Foreground="{StaticResource NormalText}"/>
+            <Separator x:Name="seperator4" Visibility="Collapsed"/>
+            <Label x:Name="hVScrollBarXYLabel" Foreground="{StaticResource NormalText}"/>
+            <Separator x:Name="seperator6" Visibility="Collapsed"/>
+            <Label x:Name="hScrollBarValueLabel" Foreground="{StaticResource NormalText}"/>
+            <Separator x:Name="seperator8" Visibility="Collapsed"/>
+            <Label x:Name="vScrollBarValueLabel" Foreground="{StaticResource NormalText}"/>
+            <Separator x:Name="seperator9" Visibility="Collapsed"/>
+            <StatusBarItem HorizontalAlignment="Right" DockPanel.Dock="Right">
+                <StackPanel Orientation="Horizontal">
+                    <wpfTool:SplitButton x:Name="MoreSettingsButton" Margin="-2" Content="{StaticResource Gear}">
+                        <wpfTool:SplitButton.DropDownContent>
+                            <StackPanel Background="{DynamicResource ContextMenuBackground}">
+                                <MenuItem x:Name="QuickEditEntitiesTransparentLayers" Header="Edit Entites Transparency"></MenuItem>
+                                <MenuItem x:Name="QuickSwapEncoreManiaEntitVisibility" Header="Toggle Encore/Mania Entities"></MenuItem>
+                                <MenuItem x:Name="QuickSwapScrollDirection" Header="Swap Scroll Lock Direction"></MenuItem>
+                            </StackPanel>
+                        </wpfTool:SplitButton.DropDownContent>
+                    </wpfTool:SplitButton>
+                    <Button Name="FilterButton" Margin="4,-2,0,-2" Width="30" Content="{StaticResource Invert}" Padding="2">
+                        <Button.ContextMenu>
+                            <ContextMenu Name="Context" Style="{StaticResource DefaultContextMenuStyle}">
+                               <CheckBox Style="{StaticResource CheckBoxStyle1}"  x:Name="maniaFilterCheck" Margin="5">Mania (000000)</CheckBox>
+                               <CheckBox Style="{StaticResource CheckBoxStyle1}"  x:Name="bothFilterCheck" Margin="5">Common (000000)</CheckBox>
+                               <CheckBox Style="{StaticResource CheckBoxStyle1}"  x:Name="pinballFilterCheck" Margin="5">Pinball (000000)</CheckBox>
+                               <CheckBox Style="{StaticResource CheckBoxStyle1}"  x:Name="encoreFilterCheck" Margin="5">Encore (000000)</CheckBox>
+                               <CheckBox Style="{StaticResource CheckBoxStyle1}"  x:Name="otherFilterCheck" Margin="5" Content="Other (000000)"></CheckBox>
+                               <CheckBox Style="{StaticResource CheckBoxStyle1}"  x:Name="prePlusFilterCheck" Margin="5" Content="Filterless (Pre-Plus)"></CheckBox>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                </StackPanel>
+            </StatusBarItem>
+            <StatusBarItem DockPanel.Dock="Right">
+                <StackPanel Orientation="Horizontal">
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                    <ToggleButton Style="{DynamicResource Flat}" x:Name="pixelModeButton" Content="Pixel Count Mode" HorizontalAlignment="Center" Padding="5"/>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                    <ToggleButton  Style="{DynamicResource Flat}" x:Name="nudgeFasterButton" Content="Nudge Faster" Padding="5"/>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                    <ToggleButton Style="{DynamicResource Flat}" x:Name="scrollLockButton" Content="Scroll Lock" Padding="5"/>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                </StackPanel>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right" DockPanel.Dock="Right">
+            </StatusBarItem>
+            <MenuItem x:Name="EntityContext" Visibility="Collapsed">
+                <MenuItem x:Name="EntityNameItem" IsHitTestVisible="False"></MenuItem>
+                <MenuItem x:Name="EntitySlotIDItem" IsHitTestVisible="False"></MenuItem>
+                <MenuItem x:Name="EntityPositionItem" IsHitTestVisible="False"></MenuItem>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+            </MenuItem>
+            <MenuItem x:Name="TilesContext" Visibility="Collapsed">
+                <MenuItem x:Name="PixelPositionMenuItem" IsHitTestVisible="False"></MenuItem>
+                <MenuItem x:Name="ChunkPositionMenuItem" IsHitTestVisible="False"></MenuItem>
+                <MenuItem x:Name="TilePositionMenuItem" IsHitTestVisible="False"></MenuItem>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                <MenuItem x:Name="TileManiacIntergrationItem" Header="Edit Tile {0} with Tile Maniac"></MenuItem>
+            </MenuItem>
+        </StatusBar>
+        <StatusBar x:Name="StatusBar2"  HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.Row="4" Grid.ColumnSpan="4" Height="35" Background="{DynamicResource StatusBarBackground}" BorderBrush="{DynamicResource ContextMenuBorder}">
+            <Label x:Name="_levelIDLabel" Foreground="{StaticResource NormalText}"/>
+            <Separator x:Name="seperator7" Visibility="Collapsed"/>
+            <Label x:Name="_baseDataDirectoryLabel" Tag=" " Foreground="{StaticResource NormalText}"/>
+
+            <StatusBarItem HorizontalAlignment="Right" DockPanel.Dock="Right">
+                <Label x:Name="scrollLockDirLabel" Foreground="{StaticResource NormalText}"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right" DockPanel.Dock="Right">
+                <Separator x:Name="seperator5" Visibility="Collapsed"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <Grid Panel.ZIndex="1" Grid.ColumnSpan="4" Grid.RowSpan="2" Grid.Row="1"  Background="{StaticResource NormalBackground}" Margin="0,85,0,0">
+            <TabControl Name="EditorTabControl" BorderThickness="0 1 0 0" Background="{StaticResource NormalBackground}">
+                <TabItem Header="Editor" HorizontalAlignment="Right" Visibility="Hidden">
+                    <Grid>
+                        <Border Grid.ColumnSpan="5" Margin="10" BorderBrush="Transparent" BorderThickness="1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="5"></ColumnDefinition>
+                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                    <ColumnDefinition Width="5"></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="5"></RowDefinition>
+                                    <RowDefinition Height="*"></RowDefinition>
+                                    <RowDefinition Height="*"></RowDefinition>
+                                    <RowDefinition Height="5"></RowDefinition>
+                                </Grid.RowDefinitions>
+                                <Rectangle x:Name="ScrollBorderNE" Grid.Column="2" Grid.ColumnSpan="2" Grid.RowSpan="2" Fill="Transparent"></Rectangle>
+                                <Rectangle x:Name="ScrollBorderE" Grid.Column="3" Grid.Row="0" Grid.RowSpan="4"  Fill="Transparent"></Rectangle>
+                                <Rectangle x:Name="ScrollBorderSE" Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="2" Grid.RowSpan="2" Fill="Transparent"></Rectangle>
+
+                                <Rectangle x:Name="ScrollBorderNW" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Grid.RowSpan="2" Fill="Transparent"></Rectangle>
+                                <Rectangle x:Name="ScrollBorderW" Grid.Column="0" Grid.Row="0" Grid.RowSpan="4"  Fill="Transparent"></Rectangle>
+                                <Rectangle x:Name="ScrollBorderSW" Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="2" Grid.Row="2" Fill="Transparent"></Rectangle>
+
+                                <Rectangle x:Name="ScrollBorderN" Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="0" Fill="Transparent"></Rectangle>
+                                <Rectangle x:Name="ScrollBorderS" Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="3" Fill="Transparent"></Rectangle>
+                                <Grid x:Name="OverlayPanel" Grid.RowSpan="6" Grid.ColumnSpan="6" Background="{DynamicResource NormalBackground}" Margin="3">
+                                    <Grid x:Name="SplitContianer">
+                                        <Grid Name="gridMain">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition x:Name="ToolbarLeft" Width="180" MaxWidth="180" MinWidth="0"/>
+                                                <ColumnDefinition x:Name="SplitterLeft" Width="6" MaxWidth="0" MinWidth="0"/>
+                                                <ColumnDefinition Width="1*"/>
+                                                <ColumnDefinition x:Name="SplitterRight" Width="6" MinWidth="0" MaxWidth="0"/>
+                                                <ColumnDefinition x:Name="ToolbarRight" Width="0" MinWidth="0" MaxWidth="0"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <Grid x:Name="WaitingPanel" Grid.Column="2" Visibility="Collapsed" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{StaticResource NormalBackground}" Opacity="0.2">
+                                                <TextBlock FontSize="30" TextAlignment="Center" Foreground="{StaticResource NormalText}" HorizontalAlignment="Center" VerticalAlignment="Center"><Run Text="Working..."/><LineBreak/><Run Text="(Please Wait!)"/></TextBlock>
+                                            </Grid>
+                                            <TabControl Margin="-15,0,0,0" BorderThickness="0" Background="{StaticResource NormalBackground}" x:Name="LeftToolbarToolbox" Grid.Column="0" TabStripPlacement="Left" >
+                                                <TabItem Header="X">
+                                                </TabItem>
+                                                <TabItem Header="Tools">
+                                                    <TabItem.LayoutTransform>
+                                                        <RotateTransform Angle="270"></RotateTransform>
+                                                    </TabItem.LayoutTransform>
+                                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                                        <StackPanel>
+                                                            <Expander IsExpanded="False" Header="Spline Options" Foreground="{StaticResource NormalText}">
+                                                                <Border BorderBrush="Black" BorderThickness="1">
+                                                                    <StackPanel Background="{StaticResource NormalBackground}" Margin="5">
+                                                                        <Label Foreground="{StaticResource NormalText}" Content="Spline Spawn Group ID:"></Label>
+                                                                        <wpfTool:IntegerUpDown x:Name="SplineSpawnID" Value="0" Minimum="0" Maximum="600"></wpfTool:IntegerUpDown>
+                                                                        <Expander IsExpanded="False" Header="Group Options" Foreground="{StaticResource NormalText}">
+                                                                            <StackPanel Background="{StaticResource NormalBackground}" Margin="5">
+                                                                                <Label Foreground="{StaticResource NormalText}" Content="Spline Group ID"></Label>
+                                                                                <wpfTool:IntegerUpDown Value="0" Minimum="0" Maximum="600" x:Name="SplineGroupID"></wpfTool:IntegerUpDown>
+                                                                                <Separator Margin="0,10"></Separator>
+                                                                                <Label Content="Group Options:" IsEnabled="False"></Label>
+                                                                                <Separator Margin="0,10"></Separator>
+                                                                                <Label Foreground="{StaticResource NormalText}" Content="Frequency of Points" x:Name="SplinePointSeperationLabel"></Label>
+                                                                                <Slider Value="128" Minimum="4" Maximum="600" x:Name="SplinePointSeperationSlider"></Slider>
+                                                                                <wpfTool:IntegerUpDown x:Name="SplinePointSeperationNUD" Value="128" Minimum="4" Maximum="600"></wpfTool:IntegerUpDown>
+                                                                               <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" Content="Show Line" Name="SplineShowLineCheckbox" IsChecked="True"></CheckBox>
+                                                                               <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" Content="Show Points" Name="SplineShowPointsCheckbox" IsChecked="True"></CheckBox>
+                                                                               <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" Name="SplineShowObjectsCheckbox">
+                                                                                    <CheckBox.Content>
+                                                                                        <TextBlock Text="Show Object Preview" TextWrapping="Wrap"></TextBlock>
+                                                                                    </CheckBox.Content>
+                                                                                </CheckBox>
+                                                                                <Separator Margin="0,10"></Separator>
+
+                                                                                <Label Foreground="{StaticResource NormalText}" Content="Spline Shape: "></Label>
+                                                                                <RadioButton Foreground="{StaticResource NormalText}" Content="Square" Name="SplineLineMode" IsEnabled="False" IsChecked="True"></RadioButton>
+                                                                                <RadioButton Foreground="{StaticResource NormalText}" Content="Oval" Name="SplineOvalMode" IsChecked="True"></RadioButton>
+                                                                                <Separator Margin="0,10"></Separator>
+                                                                                <Label>
+
+                                                                                    <Label.Content>
+                                                                                        <TextBlock Foreground="{StaticResource NormalText}" Text="Spline Spawn Object" TextWrapping="Wrap" TextAlignment="Center"></TextBlock>
+                                                                                    </Label.Content>
+                                                                                </Label>
+                                                                                <Grid>
+                                                                                    <ComboBox x:Name="SelectedSplineRender" ></ComboBox>
+                                                                                    <Button  Content="None" VerticalAlignment="Stretch" x:Name="SplineRenderObjectName"></Button>
+                                                                                </Grid>
+                                                                            </StackPanel>
+
+                                                                        </Expander>
+
+
+                                                                        <TextBlock x:Name="SplineInfoLabel1" Visibility="Collapsed" Text="Number of Spline Objects: {0}"></TextBlock>
+                                                                        <TextBlock x:Name="SplineInfoLabel2" Visibility="Collapsed" Text="Point Frequency: {0}"></TextBlock>
+                                                                        <TextBlock x:Name="SplineInfoLabel3" Visibility="Collapsed" Text="Total Number of Spawing Objects: {0}"></TextBlock>
+                                                                        <Button Content="Render Selected Spline"></Button>
+                                                                        <Button Content="Render All Splines"></Button>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </Expander>
+                                                            <Expander Header="Draw Options" Foreground="{StaticResource NormalText}">
+                                                                <Border BorderBrush="Black" BorderThickness="1">
+                                                                    <StackPanel Margin="5">
+                                                                        <Label Foreground="{StaticResource NormalText}" Content="Brush Size (Tiles Edit Only)" x:Name="DrawTileSizeLabel"></Label>
+                                                                        <Slider Value="1" Minimum="1" Maximum="16" TickPlacement="Both" IsSnapToTickEnabled="True" x:Name="DrawTileSizeSlider"></Slider>
+                                                                        <wpfTool:IntegerUpDown x:Name="DrawTileSizeNUD" Value="1" Minimum="1" Maximum="16"></wpfTool:IntegerUpDown>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </Expander>
+                                                            <Expander IsExpanded="False" Header="Magnet Options" Foreground="{StaticResource NormalText}">
+                                                                <Border BorderBrush="Black" BorderThickness="1">
+                                                                    <StackPanel Margin="5">
+                                                                        <Label Foreground="{DynamicResource DisabledText}" x:Name="gridAlignmentSizeToolStripMenuItem" Content="Grid Alignment Size:"></Label>
+                                                                       <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="x8ToolStripMenuItem" Content="8x8"></CheckBox>
+                                                                       <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="x16ToolStripMenuItem1" Content="16x16" IsChecked="true"></CheckBox>
+                                                                       <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="x32ToolStripMenuItem" Content="32x32"></CheckBox>
+                                                                       <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="x64ToolStripMenuItem" Content="64x64"></CheckBox>
+                                                                       <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="MagnetCustomSizeToolStripMenuItem">
+                                                                            <CheckBox.Content>
+                                                                                <StackPanel Orientation="Horizontal" Background="Transparent" VerticalAlignment="Center">
+                                                                                    <TextBlock Name="CustomMagnetLabel" Tag="Custom ({0}x{0})" VerticalAlignment="Center" Text="Custom (16x16)"></TextBlock>
+                                                                                    <wpfTool:IntegerUpDown Width="20" Name="CustomMagnetSizeAdjuster" BorderBrush="Transparent" HorizontalAlignment="Right" Background="Transparent" DefaultValue="16"></wpfTool:IntegerUpDown>
+                                                                                </StackPanel>
+                                                                            </CheckBox.Content>
+                                                                        </CheckBox>
+                                                                        <Label Foreground="{DynamicResource DisabledText}" x:Name="optionsToolStripMenuItem1" Content="Options: "></Label>
+                                                                       <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" IsChecked="True" x:Name="enableXAxisToolStripMenuItem" Content="Enable X Axis"></CheckBox>
+                                                                       <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" IsChecked="True" x:Name="enableYAxisToolStripMenuItem" Content="Enable Y Axis"></CheckBox>
+                                                                    </StackPanel>
+                                                                </Border>
+
+                                                            </Expander>
+                                                            <Expander IsExpanded="False" Header="Grid Options" Foreground="{StaticResource NormalText}">
+                                                                <Border BorderBrush="Black" BorderThickness="1">
+                                                                    <StackPanel Background="{StaticResource NormalBackground}" Margin="5">
+                                                                        <Label Foreground="{DynamicResource DisabledText}" x:Name="toolStripMenuItem1" Content="Grid Size:"></Label>
+                                                                       <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="Grid16x16SizeMenuItem" Content="16x16"></CheckBox>
+                                                                       <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="Grid128x128SizeMenuItem" Content="128x128"></CheckBox>
+                                                                       <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="Grid256x256SizeMenuItem" Content="256x256"></CheckBox>
+                                                                       <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="GridCustomSizeMenuItem">
+                                                                            <CheckBox.Content>
+                                                                                <StackPanel Orientation="Horizontal" Background="Transparent" VerticalAlignment="Center">
+                                                                                    <TextBlock Name="CustomGridLabel" Tag="Custom ({0}x{0})" VerticalAlignment="Center" Text="Custom (16x16)"></TextBlock>
+                                                                                    <wpfTool:IntegerUpDown Width="20" Name="CustomGridSizeAdjuster" BorderBrush="Transparent" HorizontalAlignment="Right" Background="Transparent" ></wpfTool:IntegerUpDown>
+                                                                                </StackPanel>
+                                                                            </CheckBox.Content>
+                                                                        </CheckBox>
+                                                                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                                                                        <Grid>
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition></ColumnDefinition>
+                                                                                <ColumnDefinition></ColumnDefinition>
+                                                                            </Grid.ColumnDefinitions>
+                                                                            <Label Foreground="{StaticResource NormalText}" Content="Grid Color"></Label>
+                                                                            <wpfTool:ColorPicker Style="{StaticResource ColorPicker1}" ShowTabHeaders="False" Width="60" Grid.Column="1" HorizontalAlignment="Right" SelectedColor="Black" x:Name="GDC"></wpfTool:ColorPicker>
+                                                                        </Grid>
+                                                                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                                                                        <TextBlock HorizontalAlignment="Left">Opacity</TextBlock>
+                                                                        <Slider x:Name="gridOpacitySlider" Value="255" Maximum="255" HorizontalAlignment="Stretch"></Slider>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </Expander>
+                                                            <Expander IsExpanded="False" Header="Collision Options" Foreground="{StaticResource NormalText}">
+                                                                <Border BorderBrush="Black" BorderThickness="1">
+                                                                    <StackPanel Background="{StaticResource NormalBackground}" Margin="5">
+                                                                       <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="defaultToolStripMenuItem" Content="Default (Mania)"/>
+                                                                       <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="invertedToolStripMenuItem" Content="Inverted"/>
+                                                                       <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="customToolStripMenuItem1" Content="Custom"/>
+                                                                        <Expander Header="Custom Values..." Foreground="{StaticResource NormalText}">
+                                                                            <StackPanel>
+                                                                                <Grid>
+                                                                                    <Grid.ColumnDefinitions>
+                                                                                        <ColumnDefinition></ColumnDefinition>
+                                                                                        <ColumnDefinition></ColumnDefinition>
+                                                                                    </Grid.ColumnDefinitions>
+                                                                                    <Label Foreground="{StaticResource NormalText}" Content="All"></Label>
+                                                                                    <wpfTool:ColorPicker Style="{StaticResource ColorPicker1}" ShowTabHeaders="False" Width="60" Grid.Column="1" HorizontalAlignment="Right" SelectedColor="White" x:Name="CSAC"></wpfTool:ColorPicker>
+                                                                                </Grid>
+                                                                                <Grid>
+                                                                                    <Grid.ColumnDefinitions>
+                                                                                        <ColumnDefinition></ColumnDefinition>
+                                                                                        <ColumnDefinition></ColumnDefinition>
+                                                                                    </Grid.ColumnDefinitions>
+                                                                                    <Label Foreground="{StaticResource NormalText}" Content="Top Only"></Label>
+                                                                                    <wpfTool:ColorPicker Style="{StaticResource ColorPicker1}" ShowTabHeaders="False" Width="60" Grid.Column="1" HorizontalAlignment="Right" SelectedColor="Yellow" x:Name="SSTOC"></wpfTool:ColorPicker>
+                                                                                </Grid>
+                                                                                <Grid>
+                                                                                    <Grid.ColumnDefinitions>
+                                                                                        <ColumnDefinition></ColumnDefinition>
+                                                                                        <ColumnDefinition></ColumnDefinition>
+                                                                                    </Grid.ColumnDefinitions>
+                                                                                    <wpfTool:ColorPicker Style="{StaticResource ColorPicker1}" ShowTabHeaders="False" Width="60" Grid.Column="1" HorizontalAlignment="Right" SelectedColor="Red" x:Name="CSLRDC"></wpfTool:ColorPicker>
+                                                                                    <Label Foreground="{StaticResource NormalText}" Content="LRD"></Label>
+                                                                                </Grid>
+                                                                            </StackPanel>
+                                                                        </Expander>
+                                                                        <StackPanel Orientation="Vertical">
+                                                                            <Label Foreground="{StaticResource NormalText}" HorizontalAlignment="Left">Opacity</Label>
+                                                                            <Slider x:Name="collisionOpacitySlider" Value="255" Maximum="255" HorizontalAlignment="Stretch"></Slider>
+                                                                        </StackPanel>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </Expander>
+                                                            <Expander IsExpanded="False" Header="Other Options" Foreground="{StaticResource NormalText}">
+                                                                <Border BorderBrush="Black" BorderThickness="1">
+                                                                    <StackPanel Background="{StaticResource NormalBackground}" Margin="5">
+                                                                        <Grid>
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition></ColumnDefinition>
+                                                                                <ColumnDefinition></ColumnDefinition>
+                                                                            </Grid.ColumnDefinitions>
+                                                                            <wpfTool:ColorPicker ShowTabHeaders="False" Width="60" Grid.Column="1" HorizontalAlignment="Right" SelectedColor="Blue" x:Name="WLC" Style="{StaticResource ColorPicker1}"></wpfTool:ColorPicker>
+                                                                            <Label Foreground="{StaticResource NormalText}" Content="Water Color" Grid.ColumnSpan="1"></Label>
+                                                                        </Grid>
+                                                                        <StackPanel Orientation="Vertical" Margin="0,1">
+                                                                            <Label Foreground="{StaticResource NormalText}" Content="Faster Nudge Amount" HorizontalAlignment="Left" VerticalAlignment="Top" Height="26"/>
+                                                                            <wpfTool:IntegerUpDown Name="FasterNudgeValueNUD" Value="5" HorizontalAlignment="Left" Width="55"/>
+                                                                        </StackPanel>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </Expander>
+                                                        </StackPanel>
+                                                    </ScrollViewer>
+                                                </TabItem>
+                                                <TabItem Header="Scene" >
+                                                    <TabItem.LayoutTransform>
+                                                        <RotateTransform Angle="270"></RotateTransform>
+                                                    </TabItem.LayoutTransform>
+                                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                                        <StackPanel>
+                                                            <Expander Header="Layer Tools" Foreground="{StaticResource NormalText}">
+                                                                <Border BorderBrush="Black" BorderThickness="1">
+                                                                    <StackPanel Margin="5">
+                                                                        <Expander IsExpanded="False" Name="LayerViewOptionsHost" Header="View Options" Foreground="{StaticResource NormalText}">
+                                                                            <Border BorderBrush="Black" BorderThickness="1">
+                                                                                <StackPanel Margin="5">
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" x:Name="moveExtraLayersToFrontToolStripMenuItem">
+                                                                                        <TextBlock Foreground="{StaticResource NormalText}" Text="Move Extra Layers to Front" TextWrapping="Wrap"></TextBlock>
+                                                                                    </CheckBox>
+                                                                                </StackPanel>
+                                                                            </Border>
+                                                                        </Expander>
+                                                                        <Expander IsExpanded="False" Name="layerEditOptionsHost" Header="Edit Options" Foreground="{StaticResource NormalText}">
+                                                                            <Border BorderBrush="Black" BorderThickness="1">
+                                                                                <StackPanel Margin="5">
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="findUnusedTilesToolStripMenuItem" Content="Find Unused Tiles"/>
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="multiLayerSelectionToolStripMenuItem" Content="Multi-Layer Selection Mode" IsEnabled="True" Visibility="Collapsed" IsChecked="True"/>
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="copyAirToggle" >
+                                                                                        <TextBlock Text="Copy Air Tiles" Name="CopyAirLabel" TextWrapping="Wrap"></TextBlock>
+                                                                                    </CheckBox>
+                                                                                </StackPanel>
+                                                                            </Border>
+                                                                        </Expander>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </Expander>
+                                                            <Expander Header="Entity Tools" Foreground="{StaticResource NormalText}">
+                                                                <Border BorderBrush="Black" BorderThickness="1">
+                                                                    <StackPanel Margin="5">
+                                                                        <Expander IsExpanded="False" x:Name="EntitiesViewOptionsHost" Header="View Options" Foreground="{StaticResource NormalText}">
+                                                                            <Border BorderBrush="Black" BorderThickness="1">
+                                                                                <StackPanel Margin="5">
+                                                                                    <Label x:Name="entityVisibilityOptionsToolStripMenuItem" IsEnabled="False">
+                                                                                        <TextBlock TextWrapping="Wrap" Text="Entity Visibility Options:"></TextBlock>
+                                                                                    </Label>
+                                                                                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="showEntitiesAboveAllOtherLayersToolStripMenuItem" Content="Always On Top"/>
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="prioritizedViewingToolStripMenuItem" Content="Prioritized Viewing"/>
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="SelectionBoxesAlwaysPrioritized" IsChecked="True">
+                                                                                        <TextBlock TextWrapping="Wrap" Text="Selection Boxes Always Prioritized"></TextBlock>
+                                                                                    </CheckBox>
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="showEntitySelectionBoxesToolStripMenuItem">
+                                                                                        <TextBlock TextWrapping="Wrap" Text="Show Entity Selection Boxes"></TextBlock>
+                                                                                    </CheckBox>
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="toggleEncoreManiaObjectVisibilityToolStripMenuItem">
+                                                                                        <TextBlock TextWrapping="Wrap" Text="Toggle Encore/Mania Object Visibility"></TextBlock>
+                                                                                    </CheckBox>
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="EditEntitiesTransparencyToggle">
+                                                                                        <TextBlock Text="Transparent Layers for Editing Entities" TextWrapping="Wrap"></TextBlock>
+                                                                                    </CheckBox>
+                                                                                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                                                                                    <Label x:Name="objectFilterToolStripMenuItem" Content="Entity Filter:" IsEnabled="False"/>
+                                                                                    <TextBox x:Name="toolStripTextBox1" VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="2" UseLayoutRounding="False" />
+                                                                                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                                                                                    <Label x:Name="entityViewSettingsLabel" IsEnabled="False">
+                                                                                        <TextBlock TextWrapping="Wrap" Text="Entity Specific Options:"></TextBlock>
+                                                                                    </Label>
+                                                                                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="showParallaxSpritesToolStripMenuItem">
+                                                                                        <TextBlock Text="Show Full Parallax Sprites" TextWrapping="Wrap"></TextBlock>
+                                                                                    </CheckBox>
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="showEntityPathArrowsToolstripItem">
+                                                                                        <TextBlock Text="Show WarpDoor/Entity Path Arrows" TextWrapping="Wrap"></TextBlock>
+                                                                                    </CheckBox>
+                                                                                    <Border BorderThickness="1" BorderBrush="{StaticResource NormalText}" Margin="5">
+                                                                                        <Label HorizontalContentAlignment="Center">
+                                                                                            <Menu Background="Transparent" HorizontalAlignment="Center" BorderBrush="{StaticResource NormalText}">
+                                                                                                <MenuItem>
+                                                                                                    <MenuItem.Header>
+                                                                                                        <TextBlock Text="Water Level..." Foreground="{StaticResource NormalText}"></TextBlock>
+                                                                                                    </MenuItem.Header>
+                                                                                                    <MenuItem x:Name="showWaterLevelToolStripMenuItem" Header="Show Water Level"/>
+                                                                                                    <MenuItem x:Name="waterLevelAlwaysShowItem" Header="Always Show Regardless of Selection"/>
+                                                                                                    <MenuItem x:Name="sizeWithBoundsWhenNotSelectedToolStripMenuItem" Header="Size with Bounds when Not Selected"/>
+                                                                                                </MenuItem>
+                                                                                            </Menu>
+                                                                                        </Label>
+                                                                                    </Border>
+
+                                                                                    <Border BorderThickness="1" BorderBrush="{StaticResource NormalText}" Margin="5">
+                                                                                        <Label HorizontalContentAlignment="Center">
+                                                                                            <Menu Background="Transparent" HorizontalAlignment="Center" BorderBrush="{StaticResource NormalText}">
+                                                                                                <MenuItem>
+                                                                                                    <MenuItem.Header>
+                                                                                                        <TextBlock Text="Menu Settings..." Foreground="{StaticResource NormalText}"></TextBlock>
+                                                                                                    </MenuItem.Header>
+                                                                                                    <MenuItem x:Name="menuLanguageToolStripMenuItem" Header="Menu Language">
+                                                                                                        <MenuItem x:Name="eNToolStripMenuItem" Header="EN" Tag="EN"/>
+                                                                                                        <MenuItem x:Name="fRToolStripMenuItem" Header="FR" Tag="FR"/>
+                                                                                                        <MenuItem x:Name="gEToolStripMenuItem" Header="GE" Tag="GE"/>
+                                                                                                        <MenuItem x:Name="iTToolStripMenuItem" Header="IT" Tag="IT"/>
+                                                                                                        <MenuItem x:Name="jPToolStripMenuItem" Header="JP" Tag="JP"/>
+                                                                                                        <MenuItem x:Name="kOToolStripMenuItem" Header="KO" Tag="KO"/>
+                                                                                                        <MenuItem x:Name="sCToolStripMenuItem" Header="SC" Tag="SC"/>
+                                                                                                        <MenuItem x:Name="sPToolStripMenuItem" Header="SP" Tag="SP"/>
+                                                                                                        <MenuItem x:Name="tCToolStripMenuItem" Header="TC" Tag="TC"/>
+                                                                                                    </MenuItem>
+                                                                                                    <MenuItem x:Name="menuButtonsToolStripMenuItem" Header="Menu Buttons">
+                                                                                                        <MenuItem x:Name="xboxToolStripMenuItem" Header="Xbox" Tag="Xbox"/>
+                                                                                                        <MenuItem x:Name="pS4ToolStripMenuItem" Header="PS4" Tag="PS4"/>
+                                                                                                        <MenuItem x:Name="nintendoSwitchToolStripMenuItem" Header="Nintendo Switch...">
+                                                                                                            <MenuItem x:Name="normalToolStripMenuItem1" Header="Normal" Tag="Switch"/>
+                                                                                                            <MenuItem x:Name="joyconLToolStripMenuItem" Header="Joycon (L)" Tag="Switch Joy L"/>
+                                                                                                            <MenuItem x:Name="joyconRToolStripMenuItem" Header="Joycon (R)" Tag="Switch Joy R"/>
+                                                                                                        </MenuItem>
+                                                                                                        <MenuItem x:Name="saturnToolStripMenuItem" Header="Saturn...">
+                                                                                                            <MenuItem x:Name="saturnBlackToolStripMenuItem" Header="Saturn (Black)" Tag="Saturn Black"/>
+                                                                                                            <MenuItem x:Name="satrunWhiteToolStripMenuItem" Header="Saturn (White)" Tag="Saturn White"/>
+                                                                                                        </MenuItem>
+                                                                                                        <MenuItem x:Name="pCWIPToolStripMenuItem" Header="PC (WIP)...">
+                                                                                                            <MenuItem x:Name="eNJPToolStripMenuItem" Header="EN/JP" Tag="PC EN/JP"/>
+                                                                                                            <MenuItem x:Name="fRToolStripMenuItem1" Header="FR" Tag="PC FR"/>
+                                                                                                            <MenuItem x:Name="gEToolStripMenuItem1" Header="GE" Tag="PC GE"/>
+                                                                                                            <MenuItem x:Name="sPToolStripMenuItem1" Header="SP" Tag="PC SP"/>
+                                                                                                        </MenuItem>
+                                                                                                    </MenuItem>
+                                                                                                </MenuItem>
+                                                                                            </Menu>
+                                                                                        </Label>
+                                                                                    </Border>
+
+
+                                                                                </StackPanel>
+                                                                            </Border>
+                                                                        </Expander>
+                                                                        <Expander IsExpanded="False" Header="Edit Options" Name="entityEditOptionsHost" Foreground="{StaticResource NormalText}">
+                                                                            <Border BorderBrush="Black" BorderThickness="1">
+                                                                                <StackPanel Margin="5">
+                                                                                   <CheckBox  Foreground="{StaticResource NormalText}" x:Name="SortSelectedSlotIDs" Style="{StaticResource CheckBoxStyle1}">
+                                                                                        <TextBlock TextWrapping="Wrap" Text="Sort Selected Object's Slot IDs"></TextBlock>
+                                                                                    </CheckBox>
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="SortSelectedSlotIDsOptimized">
+                                                                                        <TextBlock TextWrapping="Wrap" Text="Sort Selected Object's Slot IDs (Optimized Mode)"></TextBlock>
+                                                                                    </CheckBox>
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="SortSelectedSlotIDsOrdered">
+                                                                                        <TextBlock TextWrapping="Wrap" Text="Sort Selected Object's Slot IDs (Ordered Mode)"></TextBlock>
+                                                                                    </CheckBox>
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="optimizeEntitySlotIDsToolStripMenuItem">
+                                                                                        <TextBlock TextWrapping="Wrap" Text="Optimize Entity Slot IDs"></TextBlock>
+                                                                                    </CheckBox>
+                                                                                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="0,5"/>
+                                                                                   <CheckBox Style="{StaticResource CheckBoxStyle1}" Foreground="{StaticResource NormalText}" x:Name="rightClicktoSwapSlotIDs">
+                                                                                        <TextBlock Text="Right Click to Swap Slot IDs" TextWrapping="Wrap"></TextBlock>
+                                                                                    </CheckBox>
+                                                                                    <Label x:Name="rightClicktoSwapSlotIDsNote" IsEnabled="False">
+                                                                                        <Label.Content>
+                                                                                            <TextBlock Text="NOTE: Only works on selections of two entities" TextWrapping="Wrap"></TextBlock>
+                                                                                        </Label.Content>
+                                                                                    </Label>
+                                                                                </StackPanel>
+                                                                            </Border>
+                                                                        </Expander>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </Expander>
+                                                        </StackPanel>
+                                                    </ScrollViewer>
+                                                </TabItem>
+                                                <TabItem Header="Template" Visibility="Collapsed" Foreground="{StaticResource NormalText}">
+                                                    <TabItem.LayoutTransform>
+                                                        <RotateTransform Angle="270"></RotateTransform>
+                                                    </TabItem.LayoutTransform>
+                                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                                        <StackPanel>
+                                                            <Expander Header="View Options" Foreground="{StaticResource NormalText}">
+                                                                <Border BorderBrush="Black" BorderThickness="1">
+                                                                    <StackPanel Margin="5">
+
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </Expander>
+                                                            <Expander Header="Edit Options" Foreground="{StaticResource NormalText}">
+                                                                <Border BorderBrush="Black" BorderThickness="1">
+                                                                    <StackPanel Margin="5">
+
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </Expander>
+                                                        </StackPanel>
+                                                    </ScrollViewer>
+                                                </TabItem>
+                                            </TabControl>
+
+                                            <GridSplitter  x:Name="SpliterLeft" Background="{DynamicResource NormalBackground}" ResizeDirection="Columns" Grid.Column="1" 
+                  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                  ResizeBehavior="PreviousAndNext" Grid.RowSpan="2"  />
+                                            <Grid x:Name="CenterPanel" Grid.Column="2">
+                                                <Grid MouseWheel="DevicePanel_MouseWheel" Panel.ZIndex="-4" x:Name="ViewPanelForm" Background="Black" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition></ColumnDefinition>
+                                                            <ColumnDefinition Width="20"></ColumnDefinition>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition></RowDefinition>
+                                                            <RowDefinition Height="20"></RowDefinition>
+                                                        </Grid.RowDefinitions>
+                                                        <Grid Background="White"></Grid>
+                                                        <Grid MouseWheel="DevicePanel_MouseWheel" Name="ViewPanel" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"></Grid>
+                                                        <ScrollBar Scroll="VScrollBar_Scroll" x:Name="VScrollBar" Grid.Column="1">
+                                                            <in:Interaction.Behaviors>
+                                                                <local:StepScrollBehavior/>
+                                                            </in:Interaction.Behaviors>
+                                                        </ScrollBar>
+                                                        <ScrollBar Scroll="HScrollBar_Scroll" x:Name="HScrollBar" Grid.Row="1" Orientation="Horizontal">
+                                                            <in:Interaction.Behaviors>
+                                                                <local:StepScrollBehavior/>
+                                                            </in:Interaction.Behaviors>
+                                                        </ScrollBar>
+                                                    </Grid>
+                                                    <Grid.ContextMenu>
+                                                        <ContextMenu x:Name="ViewPanelContextMenu">
+                                                            <MenuItem x:Name="editTile0WithTileManiacToolStripMenuItem" Header="Edit Collision of Tile {0} with Tile Maniac"></MenuItem>
+                                                            <MenuItem x:Name="moveThePlayerToHereToolStripMenuItem" Header="Move the Player to Here"></MenuItem>
+                                                            <MenuItem x:Name="setPlayerRespawnToHereToolStripMenuItem" Header="Set Checkpoint to Current Position"></MenuItem>
+                                                            <MenuItem x:Name="removeCheckpointToolStripMenuItem" Header="Remove Checkpoint Bindings"></MenuItem>
+                                                            <MenuItem x:Name="assetResetToolStripMenuItem" Header="Asset Reset"></MenuItem>
+                                                            <MenuItem x:Name="restartSceneToolStripMenuItem" Header="Reset Scene"></MenuItem>
+                                                            <MenuItem x:Name="moveCheckpointToolStripMenuItem" Header="Move Checkpoint Position"></MenuItem>
+                                                            <ContextMenu.Template>
+                                                                <ControlTemplate>
+                                                                    <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                                                        <StackPanel x:Name="stackContext1" Background="{TemplateBinding Background}" IsItemsHost="True">
+                                                                        </StackPanel>
+                                                                    </Border>
+                                                                </ControlTemplate>
+                                                            </ContextMenu.Template>
+                                                        </ContextMenu>
+                                                    </Grid.ContextMenu>
+                                                </Grid>
+                                            </Grid>
+
+                                            <GridSplitter x:Name="SpliterRight"  Background="{DynamicResource NormalBackground}" ResizeDirection="Columns" Grid.Column="3" 
+                  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                  ResizeBehavior="PreviousAndNext" Grid.RowSpan="2"  />
+
+                                            <Grid Background="{DynamicResource StatusBarBackground}" x:Name="ToolBarPanelRight" Grid.Column="4"></Grid>
+                                        </Grid>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </TabItem>
+                <TabControl.Resources>
+                    <Style TargetType="TabPanel">
+                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                    </Style>
+                </TabControl.Resources>
+            </TabControl>
+        </Grid>
+
+        <Menu x:Name="MenuBar" Grid.ColumnSpan="4" HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="22" Background="{DynamicResource MenuBar}" Foreground="{StaticResource NormalText}" Grid.RowSpan="2">
+            <MenuItem x:Name="fileToolStripMenuItem" Header="File" VerticalContentAlignment="Center" Margin="4,0,0,0" >
+                <MenuItem x:Name="newToolStripMenuItem" Header="New" IsEnabled="False" Visibility="Collapsed"/>
+                <MenuItem x:Name="OpenMenuItem" Header="Open" Click="OpenMenuItem_Click"/>
+                <MenuItem x:Name="openDataDirectoryToolStripMenuItem" Header="Open Data Directory" IsEnabled="False" Visibility="Collapsed"/>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Visibility="Collapsed" />
+                <MenuItem x:Name="saveToolStripMenuItem" Header="Save" IsEnabled="False" Visibility="Collapsed"/>
+                <MenuItem x:Name="saveAsToolStripMenuItem" Header="Save As" IsEnabled="False" Visibility="Collapsed"/>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Visibility="Collapsed" />
+                <MenuItem x:Name="unloadSceneToolStripMenuItem" Header="Unload Scene" IsEnabled="False" Visibility="Collapsed"/>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Visibility="Collapsed" />
+                <MenuItem x:Name="backupToolStripMenuItem" Header="Backup" IsEnabled="False" Visibility="Collapsed">
+                    <MenuItem x:Name="normalToolStripMenuItem" Header="Normal" IsEnabled="False"/>
+                    <MenuItem x:Name="stageConfigToolStripMenuItem" Header="Stage Config" IsEnabled="False"/>
+                </MenuItem>
+                <MenuItem x:Name="backupRecoverButton" Header="Restore" IsEnabled="False" Visibility="Collapsed"/>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Visibility="Collapsed"/>
+                <MenuItem x:Name="exportToolStripMenuItem" Header="Export..." IsEnabled="False" Visibility="Collapsed">
+                    <MenuItem Header="Export as PNG..."></MenuItem>
+                    <MenuItem Header="Export Layers as PNG..."></MenuItem>
+                    <MenuItem Header="Options..."></MenuItem>
+                </MenuItem>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Visibility="Collapsed" />
+                <MenuItem x:Name="RecentScenes" Header="Open Recently Opened Scenes" IsEnabled="False" Visibility="Collapsed">
+                    <MenuItem x:Name="NoRecentScenesItem" Header="No Recently Opened Scenes" IsEnabled="False"/>
+                </MenuItem>
+                <MenuItem x:Name="RecentDataSources" Header="Open Recently Opened Data Folders / Packs" IsEnabled="False" Visibility="Collapsed">
+                    <MenuItem x:Name="NoRecentDataSources" Header="No Recently Opened Data Folders / Packs" IsEnabled="False"/>
+                </MenuItem>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                <MenuItem x:Name="ExitMenuItem" Header="Exit" Click="ExitMenuItem_Click"/>
+            </MenuItem>
+            <MenuItem  x:Name="editToolStripMenuItem" Header="Edit" VerticalContentAlignment="Center" Margin="0,0,0,0">
+                <MenuItem x:Name="undoToolStripMenuItem">
+                    <MenuItem.Header>
+                        <StackPanel Background="Transparent">
+                            <TextBlock Text="Undo"></TextBlock>
+                            <TextBlock Name="UndoMenuItemInfo" Visibility="Collapsed"></TextBlock>
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+                <MenuItem x:Name="redoToolStripMenuItem">
+                    <MenuItem.Header>
+                        <StackPanel Background="Transparent">
+                            <TextBlock Text="Redo"></TextBlock>
+                            <TextBlock Name="RedoMenuItemInfo" Visibility="Collapsed"></TextBlock>
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                <MenuItem x:Name="cutToolStripMenuItem" Header="Cut"/>
+                <MenuItem x:Name="copyToolStripMenuItem" Header="Copy"/>
+                <MenuItem x:Name="pasteToolStripMenuItem" Header="Paste"/>
+                <MenuItem x:Name="pasteToToolStripMenuItem" Header="Paste to">
+                    <MenuItem x:Name="pasteTochunkToolStripMenuItem" Header="Chunk"/>
+                </MenuItem>
+                <MenuItem x:Name="duplicateToolStripMenuItem" Header="Duplicate"/>
+                <MenuItem x:Name="selectAllToolStripMenuItem" Header="Select All"/>
+                <MenuItem x:Name="deleteToolStripMenuItem" Header="Delete"/>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                <MenuItem x:Name="labelItem" IsEnabled="False" Header="Flip Actions:"/>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                <MenuItem x:Name="flipHorizontalToolStripMenuItem" Header="Flip Horizontal"/>
+                <MenuItem x:Name="flipVerticalToolStripMenuItem" Header="Flip Vertical"/>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                <MenuItem x:Name="labelItem2" IsEnabled="False" Header="Tile Only Flip Actions:"/>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                <MenuItem x:Name="flipHorizontalIndvidualToolStripMenuItem" Header="Flip Horizontal Individual"/>
+                <MenuItem x:Name="flipVerticalIndvidualToolStripMenuItem" Header="Flip Vertical Individual"/>
+            </MenuItem>
+            <MenuItem  x:Name="viewToolStripMenuItem" Header="View" Margin="0,0,0,0">
+                <MenuItem x:Name="pixelModeToolStripMenuItem" Header="Enable Pixel Count Mode"/>
+                <MenuItem x:Name="changeEncorePaleteToolStripMenuItem" Header="Change Encore Palette..">
+                    <MenuItem x:Name="fromDataDirectoryToolStripMenuItem" Header="From Data Directory"/>
+                    <MenuItem x:Name="fromModDirectoryToolStripMenuItem" Header="From Mod Directory"/>
+                </MenuItem>
+                <MenuItem x:Name="statsViewerToolStripMenuItem" Header="Stat Viewer...">
+                    <MenuItem x:Name="showStatsToolStripMenuItem" Header="Show Stats"/>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                    <MenuItem x:Name="optionsToolStripMenuItem3" Header="Visibility Options:" IsEnabled="False"/>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                    <MenuItem x:Name="useLargeTextToolStripMenuItem" Header="Use Large Text"/>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem  x:Name="toolsToolStripMenuItem1" Header="Tools" Margin="0,0,0,0">
+                <MenuItem x:Name="findAndReplaceToolStripMenuItem" Header="Find and Replace..."/>
+                <MenuItem x:Name="scrollLockToolStripMenuItem" Header="Scroll Lock...">
+                    <MenuItem x:Name="statusNAToolStripMenuItem" Header="Enabled"/>
+                    <MenuItem x:Name="axisToolStripMenuItem" Header="Axis...">
+                        <MenuItem x:Name="xToolStripMenuItem" Header="X"/>
+                        <MenuItem x:Name="yToolStripMenuItem" Header="Y"/>
+                    </MenuItem>
+                    <Separator></Separator>
+                    <MenuItem x:Name="swapScrollLockDirMenuToolstripButton" Header="Swap Scroll Lock Direction" />
+                </MenuItem>
+                <MenuItem x:Name="nudgeSelectionFasterToolStripMenuItem" Header="Nudge Selection Faster"/>
+                <MenuItem x:Name="resetZoomLevelToolstripMenuItem" Header="Reset Zoom Level"/>
+                <MenuItem x:Name="goToToolStripMenuItem1" Header="Go to..">
+                    <MenuItem x:Name="specificPlaceToolStripMenuItem" Header="Specific Place"/>
+                    <MenuItem x:Name="playerSpawnToolStripMenuItem" Header="Player Spawn"/>
+                </MenuItem>
+                <MenuItem x:Name="overlayImageToolStripMenuItem" Header="Overlay Image" IsEnabled="False"/>
+                <MenuItem x:Name="changeLevelIDToolStripMenuItem" Header="Change Level ID..."/>
+                <MenuItem x:Name="newShortcutToolStripMenuItem" Header="Create a Desktop Shortcut">
+                    <MenuItem x:Name="toolStripMenuItem2" Header="From Current Config:" IsEnabled="False"/>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                    <MenuItem x:Name="withCurrentCoordinatesToolStripMenuItem" Header="With Current Coordinates"/>
+                    <MenuItem x:Name="withoutCurrentCoordinatesToolStripMenuItem" Header="Without Coordinates (Recommended)"/>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                    <MenuItem x:Name="makeForDataFolderOnlyToolStripMenuItem" Header="Make for Data Folder Only"/>
+                </MenuItem>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                <MenuItem x:Name="developerToolStripMenuItem1" Header="Developer Tools">
+                    <MenuItem x:Name="developerInterfaceToolStripMenuItem" Header="Developer Interface"/>
+                    <MenuItem x:Name="soundLooperToolStripMenuItem" Header="Sound Looper"/>
+                    <MenuItem x:Name="mD5GeneratorToolStripMenuItem" Header="MD5 Generator"/>
+                    <MenuItem x:Name="consoleWindowToolStripMenuItem" Header="Console Window"/>
+                    <MenuItem x:Name="saveForForceOpenOnStartupToolStripMenuItem" Header="Save for Force Open on Startup"/>
+                    <MenuItem x:Name="enableAllButtonsToolStripMenuItem" Header="Enable all Main Toolstrip Buttons"/>
+                    <MenuItem Header="Force Toolbars to Open/Close">
+                        <MenuItem Header="Right Toolbar" x:Name="rightToolbarToggleDev"></MenuItem>
+                        <MenuItem Header="Left Toolbar" x:Name="leftToolbarToggleDev"></MenuItem>
+                    </MenuItem>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem  x:Name="sceneToolStripMenuItem" Header="Scene" Margin="0,0,0,0"  >
+                <MenuItem x:Name="entityManagerToolStripMenuItem" Header="Entity Manager"/>
+                <MenuItem x:Name="importSoundsToolStripMenuItem" Header="Import Sounds"/>
+                <MenuItem x:Name="layerManagerToolStripMenuItem" Header="Layer Manager"/>
+                <MenuItem x:Name="maniacinieditorToolStripMenuItem" Header="Maniac.INI Settings Editor"/>
+                <MenuItem x:Name="editBackgroundColorsToolStripMenuItem" Header="Background Colors">
+                    <MenuItem x:Name="primaryColorToolStripMenuItem" Header="Primary Color..."/>
+                    <MenuItem x:Name="secondaryColorToolStripMenuItem" Header="Secondary Color..."/>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem  x:Name="sceneToolStripMenuItem1" Header="Folders" Margin="0,0,0,0" >
+                <MenuItem x:Name="openSceneFolderToolStripMenuItem" Header="Open Scene Folder"/>
+                <MenuItem x:Name="openDataDirectoryFolderToolStripMenuItem" Header="Open Data Directory"/>
+                <MenuItem x:Name="openSonicManiaFolderToolStripMenuItem" Header="Open Sonic Mania Folder"/>
+                <MenuItem x:Name="OpenManiacFolders" Header="Maniac Editor...">
+                    <MenuItem x:Name="openManiacEditorFolderToolStripMenuItem" Header="Open Maniac Editor Directory"/>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                    <MenuItem x:Name="openManiacEditorFixedSettingsFolderToolStripMenuItem" Header="Open Fixed Settings Directory"/>
+                    <MenuItem x:Name="openManiacEditorPortableSettingsFolderToolStripMenuItem" Header="Open Portable Settings Directory"/>
+                </MenuItem>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                <MenuItem x:Name="openASavedPlaceToolStripMenuItem" Header="Open a Saved Place">
+                    <MenuItem x:Name="noSavedPlacesToolStripMenuItem" Header="No Saved Places" IsEnabled="False"/>
+                </MenuItem>
+                <MenuItem x:Name="openAResourcePackFolderToolStripMenuItem" Header="Open a Resource Pack Folder">
+                    <MenuItem x:Name="noResourcePackFolderToolStripMenuItem" Header="No Resource Packs Loaded" IsEnabled="False"/>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem  x:Name="toolsToolStripMenuItem" Header="Apps" Margin="0,0,0,0" >
+                <MenuItem x:Name="MenuAppsSonicMania" Header="Sonic Mania (Headless Launch)"></MenuItem>
+                <MenuItem x:Name="MenuAppsModLoader" Header="Mania Mod Manager (Mod Loader)"></MenuItem>
+                <MenuItem x:Name="tileManiacToolStripMenuItem" Header="Tile Maniac (Collision Editor)"/>
+                <MenuItem x:Name="insanicManiacToolStripMenuItem" Header="Insanic Maniac (Game Config Editor)"/>
+                <MenuItem x:Name="duplicateObjectIDHealerToolStripMenuItem" Header="Fixer Maniac (Duplicate Object ID Fixer)"/>
+                <MenuItem x:Name="rSDKAnnimationEditorToolStripMenuItem" Header="RSDK Animation Editor"/>
+                <MenuItem x:Name="RenderListManagerToolstripMenuItem" Header="Render List Manager" Visibility="Collapsed" IsEnabled="False"></MenuItem>
+                <MenuItem x:Name="MenuAppsCheatEngine" Header="Cheat Engine (Memory Editing)"></MenuItem>
+                <MenuItem IsEnabled="True">
+                    <MenuItem.Header>
+                        <TextBlock x:Name="colorPaletteEditorToolStripMenuItem" Text="ManiaPal (Color Palette Editor)"></TextBlock>
+                    </MenuItem.Header>
+                    <MenuItem x:Name="maniaPalStageConfigToolStripMenuItem" Header="ManiaPal (Stage Config)"/>
+                    <MenuItem x:Name="maniaPalGameConfigToolStripMenuItem" Header="ManiaPal (Game Config)"/>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                    <MenuItem x:Name="maniaPalHint" Header="Hint:" IsEnabled="False" HorizontalAlignment="Left" Margin="0" RenderTransformOrigin="0.5,0.5" VerticalAlignment="Bottom" UseLayoutRounding="False" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                </MenuItem>
+                <MenuItem Header="RetroED Tools...">
+                    <MenuItem Header="RSDK Unpacker" Name="RSDKUnpacker"></MenuItem>
+                </MenuItem>
+                <MenuItem Visibility="Collapsed" x:Name="optionsToolStripMenuItem2" Header="Options" IsEnabled="False"/>
+            </MenuItem>
+            <MenuItem  x:Name="helpToolStripMenuItem" Header="Other" Margin="0,0,0,0" >
+                <MenuItem x:Name="aboutToolStripMenuItem" Header="About"/>
+                <MenuItem x:Name="optionsToolStripMenuItem" Header="Settings"/>
+                <MenuItem x:Name="controlsToolStripMenuItem" Header="Controls"/>
+                <MenuItem x:Name="wikiToolStripMenuItem" Header="Wiki"/>
+            </MenuItem>
+            <MenuItem  Header="Context 2" Visibility="Collapsed">
+                <MenuItem x:Name="moveThisPlayerToolStripMenuItem"/>
+            </MenuItem>
+        </Menu>
+        <Grid Grid.ColumnSpan="4" Grid.Row="1" Background="{StaticResource NormalBackground}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="82"></RowDefinition>
+            </Grid.RowDefinitions>
+            <ToolBarTray HorizontalAlignment="Stretch" VerticalAlignment="Top" Grid.Row="1" Margin="0,0,0,0" Background="{StaticResource NormalBackground}" IsLocked="True" x:Name="ToolbarTray">
+                <ToolBar Band="0" BandIndex="1" HorizontalAlignment="Stretch" Height="45" x:Name="MainToolbarButtons" Background="{StaticResource NormalBackground}" Foreground="{StaticResource NormalText}">
+                    <Button x:Name="New" Style="{StaticResource DisabledState2}" Width="32" Margin="0,0,0,0" Padding="0,0,0,0" IsEnabled="True" Content="{StaticResource AddFile}"></Button>
+                    <Button x:Name="Open" Width="32" Style="{StaticResource DisabledState2}"  Margin="0,0,0,0" Padding="0,0,0,0">
+                        <Button.Content>
+                            <DockPanel Width="26" Height="36">
+                                <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Name="svg318" Width="24" Height="24">
+                                    <Canvas.RenderTransform>
+                                        <TranslateTransform X="0" Y="0"/>
+                                    </Canvas.RenderTransform>
+                                    <Canvas.Resources/>
+                                    <!--Unknown tag: metadata-->
+                                    <!--Unknown tag: sodipodi:namedview-->
+                                    <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="path314" Data="M0 0h24v24H0V0z"/>
+                                    <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="FolderIcon" Fill="#FFE793" Data="M10 4H2v16h20V6H12l-2-2z"/>
+                                </Canvas>
+                            </DockPanel>
+                        </Button.Content>
+                    </Button>
+                    <Button x:Name="Save" Style="{StaticResource DisabledState2}" Width="32" Margin="0,0,0,0"  Padding="0,0,0,0" Content="{StaticResource SaveFloppy}"></Button>
+                    <Separator/>
+                    <Button x:Name="ZoomInButton" Style="{StaticResource DisabledState2}" Width="32" Margin="0,0,0,0" Padding="0,0,0,0" Content="{StaticResource ZoomIn}"></Button>
+                    <Button x:Name="ZoomOutButton" Style="{StaticResource DisabledState2}" Width="32"   Margin="0,0,0,0" Padding="0,0,0,0" Content="{StaticResource ZoomOut}"></Button>
+                    <Separator/>
+                    <Button x:Name="RunSceneButton" Width="32" Height="34"  Margin="0,0,0,0" Padding="0,0,0,0" Style="{StaticResource DisabledState2}">
+                        <Button.Content>
+                            <DockPanel Width="26" Height="36">
+                                <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Name="svg128" Width="24" Height="24">
+                                    <Canvas.RenderTransform>
+                                        <TranslateTransform X="0" Y="0"/>
+                                    </Canvas.RenderTransform>
+                                    <Canvas.Resources/>
+                                    <!--Unknown tag: metadata-->
+                                    <!--Unknown tag: sodipodi:namedview-->
+                                    <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="path124" Data="M0 0h24v24H0z"/>
+                                    <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="RunSceneIcon" Fill="Green" Data="M15 7.5V2H9v5.5l3 3 3-3zM7.5 9H2v6h5.5l3-3-3-3zM9 16.5V22h6v-5.5l-3-3-3 3zM16.5 9l-3 3 3 3H22V9h-5.5z"/>
+                                </Canvas>
+                            </DockPanel>
+                        </Button.Content>
+                    </Button>
+                    <Button BorderThickness="0" Width="34" Margin="0,0,0,0" Padding="0,0,0,0" Style="{DynamicResource RemoveMouseOverEffectType2}" VerticalAlignment="Center">
+                        <Button.Content>
+                            <StackPanel Background="{StaticResource NormalBackground}" Height="32" Width="32">
+                                <Menu Background="{StaticResource NormalBackground}" Padding="0" BorderThickness="0" Margin="1" Height="30">
+                                    <MenuItem  x:Name="RunSceneDropDown" Header="{StaticResource DownArrow}" Padding="4,-3,3,0" Height="30">
+                                        <MenuItem x:Name="launchToolStripMenuItem" Header="Launch/Attach/Focus"/>
+                                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                                        <MenuItem x:Name="trackThePlayerToolStripMenuItem" Header="Track the Player...">
+                                            <MenuItem x:Name="trackP1ToolStripMenuItem" Header="Track P1" Tag="1"/>
+                                            <MenuItem x:Name="trackP2ToolStripMenuItem" Header="Track P2" Tag="2"/>
+                                            <MenuItem x:Name="trackP3ToolStripMenuItem" Header="Track P3" Tag="3"/>
+                                            <MenuItem x:Name="trackP4ToolStripMenuItem" Header="Track P4" Tag="4"/>
+                                        </MenuItem>
+                                        <MenuItem x:Name="restartSceneToolStripMenuItem1" Header="Restart Scene"/>
+                                        <MenuItem x:Name="assetResetToolStripMenuItem1" Header="Asset Reset"/>
+                                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                                        <MenuItem x:Name="openModManagerToolStripMenuItem" Header="Open Mod Manager"/>
+                                        <MenuItem x:Name="selectConfigToolStripMenuItem" Header="Select Config...">
+                                            <MenuItem x:Name="noConfigFilesToolStripMenuItem" Header="No Config Files" IsEnabled="False"/>
+                                        </MenuItem>
+                                        <MenuItem x:Name="editConfigsToolStripMenuItem1" Header="Edit Configs"/>
+                                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                                        <MenuItem x:Name="gameOptionsMenuItem" Header="Game Options..."/>
+                                    </MenuItem>
+                                </Menu>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                    <Separator/>
+                    <Button x:Name="UndoButton" Width="32" Margin="0,0,0,0" Padding="0,0,0,0" Tag="Undo {0} (Ctrl + Z)" Content="{StaticResource UndoIcon}" Style="{StaticResource DisabledState2}"></Button>
+                    <Button x:Name="RedoButton" Width="32"   Margin="0,0,0,0" Padding="0,0,0,0" Tag="Redo {0} (Ctrl + Y)" Content="{StaticResource RedoIcon}" Style="{StaticResource DisabledState2}"></Button>
+                    <Separator/>
+                    <Button x:Name="ReloadButton" Width="32" Margin="0,0,0,0" Padding="0,0,0,0" Content="{StaticResource Refresh}" Style="{StaticResource DisabledState2}"></Button>
+                    <Separator/>
+                    <ToggleButton x:Name="PointerToolButton" Content="{StaticResource Pointer}" Width="32" Margin="0,0,0,0" Padding="0,0,0,0" Style="{StaticResource DisabledState1}"></ToggleButton>
+                    <ToggleButton x:Name="SelectToolButton" Width="32" Margin="0,0,0,0" Padding="0,0,0,0"  Content="{StaticResource Select}" Foreground="Red" Style="{StaticResource DisabledState1}"></ToggleButton>
+                    <ToggleButton x:Name="DrawToolButton" Width="32" Margin="0,0,0,0" Padding="0,0,0,0" Content="{StaticResource Draw}" Style="{StaticResource DisabledState1}"></ToggleButton>
+                    <ToggleButton x:Name="SplineToolButton" Width="32" Margin="0,0,0,0" Padding="0,0,0,0" Content="{StaticResource Shapes}" Style="{StaticResource DisabledState1}"></ToggleButton>
+                    <ToggleButton x:Name="InteractionToolButton" Width="32" Margin="0,0,0,0" Padding="0,0,0,0" Content="{StaticResource Interaction}" Style="{StaticResource DisabledState1}"></ToggleButton>
+                    <ToggleButton x:Name="MagnetMode" Width="32" Margin="0,0,0,0" Padding="0,0,0,0" Content="{StaticResource Magnet}" Style="{StaticResource DisabledState1}"></ToggleButton>
+                    <Button Visibility="Collapsed" x:Name="MagnetModeSplitButton" BorderThickness="0" Width="32" Margin="0,0,0,0" Padding="0,0,0,0" Style="{DynamicResource RemoveMouseOverEffectType2}" VerticalAlignment="Center">
+                        <Button.Content>
+                            <StackPanel Background="{StaticResource NormalBackground}" Height="32" Width="32">
+                                <Menu Background="{StaticResource NormalBackground}" Padding="0" BorderThickness="0" Margin="0,-1,0,0">
+                                    <MenuItem x:Name="MagnetModeSplitDropDown" Foreground="{StaticResource NormalText}" Header="{StaticResource DownArrow2}" Height="34">
+
+                                    </MenuItem>
+                                </Menu>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+
+                    <ToggleButton x:Name="ChunksToolButton" Style="{StaticResource DisabledState1}"   Width="32"  Margin="0,0,0,0" Padding="0,0,0,0" Content="{StaticResource Stamp}"></ToggleButton>
+                    <Separator/>
+                    <ToggleButton x:Name="EncorePaletteButton" Style="{StaticResource DisabledState1}" Width="32" Height="34"  Margin="0,0,0,0" Padding="0,0,0,0" Content="{StaticResource PaletteWheel}"></ToggleButton>
+                    <ToggleButton x:Name="ShowTileIDButton" Style="{StaticResource DisabledState1}"  Width="32"  Margin="0,0,0,0" Padding="0,0,0,0" Content="{StaticResource Info}"></ToggleButton>
+                    <ToggleButton x:Name="FlipAssistButton" Style="{StaticResource DisabledState1}"  Width="32" Margin="0,0,0,0" Padding="0,0,0,0" Content="{StaticResource RotateFlip}"></ToggleButton>
+                    <ToggleButton x:Name="ShowGridButton" Style="{StaticResource DisabledState1}" Width="32" Margin="0,0,0,0" Padding="0,0,0,0" Content="{StaticResource Grid}"></ToggleButton>
+                    <Button Visibility="Collapsed" BorderThickness="0" Width="32" Margin="0,0,0,0" Padding="0,0,0,0" Style="{DynamicResource RemoveMouseOverEffectType2}" VerticalAlignment="Center">
+                        <Button.Content>
+                            <StackPanel Background="{StaticResource NormalBackground}" Height="32" Width="32">
+                                <Menu Background="{StaticResource NormalBackground}" Padding="0" BorderThickness="0" Margin="0,-1,0,0">
+                                    <MenuItem x:Name="GridSizeButton" Foreground="{StaticResource NormalText}" Header="{StaticResource DownArrow3}" Height="34">
+                                    </MenuItem>
+                                </Menu>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                    <Separator/>
+                    <ToggleButton Checked="ShowCollisionButton_Click" Unchecked="ShowCollisionButton_Click" x:Name="ShowCollisionAButton" Width="32"  Margin="0,0,0,0" Padding="0,0,0,0" Style="{StaticResource DisabledState1}" Content="{StaticResource PathA}"></ToggleButton>
+                    <ToggleButton Checked="ShowCollisionButton_Click" Unchecked="ShowCollisionButton_Click" x:Name="ShowCollisionBButton" Width="32"  Margin="0,0,0,0" Padding="0,0,0,0" Style="{StaticResource DisabledState1}" Content="{StaticResource PathB}"></ToggleButton>
+                    <Separator/>
+                    <Grid HorizontalAlignment="Left">
+                    </Grid>
+                    <ToolBar.Resources>
+                        <Style x:Key="ToolBarMainPanelBorderStyle" TargetType="{x:Type Border}">
+                            <Setter Property="CornerRadius" Value="0,0,0,0"/>
+                        </Style>
+                    </ToolBar.Resources>
+                </ToolBar>
+                <ToolBar x:Name="LayerToolbar" Band="1" BandIndex="0" Background="{StaticResource NormalBackground}" Foreground="{StaticResource NormalText}" Margin="0,0,-4,0" >
+                    <Grid MinWidth="50" MaxWidth="90" HorizontalAlignment="Left">
+                        <Grid x:Name="LayerHint" Grid.Row="1" Margin="0,0,5,0" VerticalAlignment="Center">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"></RowDefinition>
+                            </Grid.RowDefinitions>
+                            <TextBlock x:Name="LayerLabel" Foreground="{StaticResource NormalText}" Grid.Row="0" Text="Layers:"/>
+                        </Grid>
+                    </Grid>
+                    <Separator Margin="0,2"/>
+                    <ToggleButton x:Name="ShowFGLower" Background="Transparent" Foreground="{StaticResource NormalText}" Content="FG Lower" Style="{DynamicResource EditLayerFlat}"/>
+                    <ToggleButton x:Name="ShowFGLow" Background="Transparent" Foreground="{StaticResource NormalText}" Content="FG Low" Style="{DynamicResource EditLayerFlat}"/>
+                    <ToggleButton x:Name="ShowFGHigh" Background="Transparent" Foreground="{StaticResource NormalText}" Content="FG High" Style="{DynamicResource EditLayerFlat}"/>
+                    <ToggleButton x:Name="ShowFGHigher" Background="Transparent" Foreground="{StaticResource NormalText}" Content="FG Higher" Style="{DynamicResource EditLayerFlat}"/>
+                    <ToggleButton x:Name="ShowEntities" Background="Transparent" Foreground="{StaticResource NormalText}" Content="Entities" Style="{DynamicResource EditLayerFlat}"/>
+                    <ToggleButton x:Name="ShowAnimations" Foreground="{StaticResource NormalText}" Content="Animations" Background="Transparent" Style="{DynamicResource EditLayerFlat}" IsEnabled="False"/>
+                    <Button BorderThickness="0" Width="34" Margin="0,0,0,0" Padding="0,0,0,0" Style="{DynamicResource RemoveMouseOverEffectType2}" VerticalAlignment="Center">
+                        <Button.Content>
+                            <StackPanel Background="{StaticResource NormalBackground}" Height="32" Width="32">
+                                <Menu Background="{StaticResource NormalBackground}" Padding="0" BorderThickness="0" Margin="1" Height="30">
+                                    <MenuItem  x:Name="animationsSplitButton_Dropdown" Header="{StaticResource DownArrow4}" Padding="4,-3,3,0" Height="30">
+                                        <MenuItem x:Name="movingPlatformsObjectsToolStripMenuItem" Header="Moving Platforms / Objects"></MenuItem>
+                                        <MenuItem x:Name="spriteFramesToolStripMenuItem" Header="Sprite Frames"></MenuItem>
+                                        <MenuItem x:Name="parallaxAnimationMenuItem" Header="Parallax Animation (Will Disable Editing)"></MenuItem>
+                                    </MenuItem>
+                                </Menu>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+
+                    <Separator Margin="0,2"/>
+                    <Separator x:Name="extraViewLayersSeperator" Margin="0,2" Visibility="Collapsed"/>
+                    <local:EditLayerToggleButton IsLayerOptionsEnabled="True" x:Name="EditFGLower" Text="FG Lower" TextForeground="Red"></local:EditLayerToggleButton>
+                    <local:EditLayerToggleButton IsLayerOptionsEnabled="True" x:Name="EditFGLow" Text="FG Low" TextForeground="Red"></local:EditLayerToggleButton>
+                    <local:EditLayerToggleButton IsLayerOptionsEnabled="True" x:Name="EditFGHigh" Text="FG High" TextForeground="Red"></local:EditLayerToggleButton>
+                    <local:EditLayerToggleButton IsLayerOptionsEnabled="True" x:Name="EditFGHigher" Text="FG Higher" TextForeground="Red"></local:EditLayerToggleButton>
+                    <local:EditLayerToggleButton x:Name="EditEntities" Text="Entities" TextForeground="Red"/>
+
+
+                    <ToolBar.Resources>
+                        <Style x:Key="ToolBarMainPanelBorderStyle" TargetType="{x:Type Border}">
+                            <Setter Property="CornerRadius" Value="0,0,0,0"/>
+                        </Style>
+                    </ToolBar.Resources>
+                </ToolBar>
+            </ToolBarTray>
+
+            <Grid Visibility="Hidden" x:Name="MultiLayerHint" Grid.Row="1" Margin="0,0,10,0" VerticalAlignment="Top" Grid.Column="1">
+                <StackPanel Background="Transparent">
+                    <TextBlock HorizontalAlignment="Center"  Text="Multi-Layer Select Controls:" Foreground="{StaticResource NormalText}"></TextBlock>
+                    <Separator></Separator>
+                    <TextBlock x:Name="LayerALabel" HorizontalAlignment="Center" Foreground="{DynamicResource EditLayerASelectedColor}" Grid.Row="0" Text="Edit Layer A: Right Click"/>
+                    <TextBlock x:Name="LayerBLabel"  HorizontalAlignment="Center"  Foreground="{DynamicResource EditLayerBSelectedColor}" Grid.Row="1" Text="Edit Layer B: Left Click"/>
+                </StackPanel>
+            </Grid>
+            <wpfTool:SplitButton x:Name="FutureAddonButton" Visibility="Collapsed" Grid.RowSpan="2" Margin="5,0,0,0" Width="19" Grid.Column="1">
+                <wpfTool:SplitButton.DropDownContent>
+                    <StackPanel Background="{DynamicResource ContextMenuBackground}">
+                        <MenuItem Header="Swap Current Edit Layers"></MenuItem>
+                    </StackPanel>
+                </wpfTool:SplitButton.DropDownContent>
+            </wpfTool:SplitButton>
+        </Grid>
+
+    </Grid>
+</Window>
+    
+    
