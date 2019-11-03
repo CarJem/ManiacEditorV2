@@ -271,12 +271,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\RSDK Development\ManiacEditor-GenerationsEdition\RSDK-Reverse\RSDKv5\RSDKv5.csproj">
-      <Project>{cf5496f8-002b-408f-9b3d-67c88f610283}</Project>
-      <Name>RSDKv5</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="64x64.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

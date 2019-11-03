@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29324.140
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManiacEDv2", "ManiacEDv2\ManiacEDv2.csproj", "{59579A9F-DF7B-4B9B-A8F7-5459388A0BC9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSDKv5", "..\RSDK Development\ManiacEditor-GenerationsEdition\RSDK-Reverse\RSDKv5\RSDKv5.csproj", "{CF5496F8-002B-408F-9B3D-67C88F610283}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSDKv5", "RSDK-Reverse\RSDKv5\RSDKv5.csproj", "{CF5496F8-002B-408F-9B3D-67C88F610283}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
