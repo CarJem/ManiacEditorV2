@@ -114,15 +114,25 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Actions\ActionChangeTile.cs" />
+    <Compile Include="Actions\ActionDummy.cs" />
+    <Compile Include="Actions\ActionsGroup.cs" />
+    <Compile Include="Actions\ActionsGroupCloseMarker.cs" />
+    <Compile Include="Actions\IAction.cs" />
     <Compile Include="ColorsCaching.cs" />
     <Compile Include="DeviceEventArgs.cs" />
     <Compile Include="Editor UI + Controls\Editor Controls\StepScrollBehavior.cs" />
+    <Compile Include="Enum\FlipDirection.cs" />
     <Compile Include="Graphics Classes\DevicePanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Graphics Classes\DevicePanel.Designer.cs">
       <DependentUpon>DevicePanel.cs</DependentUpon>
     </Compile>
+    <Compile Include="Interfaces\Layer.cs" />
+    <Compile Include="Interfaces\Control.cs" />
+    <Compile Include="Interfaces\OldEditorMouseControls.cs" />
+    <Compile Include="Interfaces\UndoRedo.cs" />
     <Compile Include="Scene Classes\EditorBackground.cs" />
     <Compile Include="Scene Classes\EditorEntities.cs" />
     <Compile Include="Scene Classes\EditorLayer.cs" />

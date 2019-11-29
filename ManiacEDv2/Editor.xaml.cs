@@ -28,8 +28,6 @@ namespace ManiacEDv2
     public partial class Editor : Window
     {
 
-        public System.Windows.Point MousePosition = new System.Windows.Point(0, 0);
-
         public EditorScene EditorScene;
         public EditorBackground EditorBackground;
 
@@ -92,6 +90,7 @@ namespace ManiacEDv2
             dispatcherTimer.Start();
         }
 
+
         private void DispatcherTimer_Tick(object sender, EventArgs e)
         {
             RAM = ramCounter.NextValue();
@@ -144,13 +143,51 @@ namespace ManiacEDv2
         {
             if (EditorScene != null)
             {
-                if (EditorBackground != null) EditorBackground.Draw(DevicePanel);
-                if (EditorScene.LowDetails != null) EditorScene.LowDetails.DrawLayer(DevicePanel);
-                if (EditorScene.ForegroundLow != null) EditorScene.ForegroundLow.DrawLayer(DevicePanel);
-                if (EditorScene.ForegroundHigh != null) EditorScene.ForegroundHigh.DrawLayer(DevicePanel);
-                if (EditorScene.HighDetails != null) EditorScene.HighDetails.DrawLayer(DevicePanel);
+
+                if (EditorBackground != null)
+                {
+                    if (EditorScene.EditLayer == null) EditorBackground.Draw(DevicePanel);
+                    else EditorBackground.DrawEdit(DevicePanel);
+                }
+                foreach (var layer in EditorScene.Layers.OrderBy(x => x.DrawingOrder))
+                {
+                    bool viewLayerChecked = EditorScene.ViewLayerButtons.Where(x => x.LayerName == layer.Name).FirstOrDefault().IsCheckedN.Value;
+                    bool editLayerChecked = EditorScene.EditLayerButtons.Where(x => x.LayerName == layer.Name).FirstOrDefault().IsCheckedN.Value;
+                    if (viewLayerChecked || editLayerChecked) layer.DrawLayer(DevicePanel);
+                }
+
+                if (Interfaces.Control.InMiddleOfSelection) DrawSelectionRegion(Interfaces.Control.ZoomedRegionStart, Interfaces.Control.ZoomedRegionEnd);
             }
 
+        }
+
+        private void DrawSelectionRegion(System.Drawing.Point p1, System.Drawing.Point p2)
+        {
+            if (!p1.IsEmpty && !p2.IsEmpty)
+            {
+                int bound_x1 = p1.X; int bound_x2 = p2.X;
+                int bound_y1 = p1.Y; int bound_y2 = p2.Y;
+
+                if (bound_x1 != bound_x2 && bound_y1 != bound_y2)
+                {
+                    if (bound_x1 > bound_x2)
+                    {
+                        bound_x1 = p2.X;
+                        bound_x2 = p1.X;
+                    }
+                    if (bound_y1 > bound_y2)
+                    {
+                        bound_y1 = p2.Y;
+                        bound_y2 = p1.Y;
+                    }
+                }
+
+                DevicePanel.DrawRectangle(bound_x1, bound_y1, bound_x2, bound_y2, System.Drawing.Color.FromArgb(100, System.Drawing.Color.Purple));
+                DevicePanel.DrawLine(bound_x1, bound_y1, bound_x2, bound_y1, System.Drawing.Color.Purple);
+                DevicePanel.DrawLine(bound_x1, bound_y1, bound_x1, bound_y2, System.Drawing.Color.Purple);
+                DevicePanel.DrawLine(bound_x2, bound_y2, bound_x2, bound_y1, System.Drawing.Color.Purple);
+                DevicePanel.DrawLine(bound_x2, bound_y2, bound_x1, bound_y2, System.Drawing.Color.Purple);
+            }
         }
 
 
@@ -192,9 +229,11 @@ namespace ManiacEDv2
             Scroll(e.Delta, new System.Drawing.Point(0,0));
         }
 
+        
+
         public void UpdatePositionLabel()
         {
-            positionLabel.Content = string.Format("X: {0}, Y:{1}, Zoom Level: {2}", MousePosition.X, MousePosition.Y, ZoomLevel);
+            positionLabel.Content = string.Format("X: {0}, Y:{1}, Zoom Level: {2}", Interfaces.Control.ZoomedMousePosition.X, Interfaces.Control.ZoomedMousePosition.Y, ZoomLevel);
         }
 
         private void UpdateZoomLevel(int zoom_level, System.Drawing.Point zoom_point)
@@ -294,6 +333,16 @@ namespace ManiacEDv2
 
         #region UI Updating Methods
 
+        public void UpdateClickLabels()
+        {
+            if (EditorScene != null)
+            {
+                int tileCount = EditorScene.ForegroundHigh.SelectedTiles.Count + EditorScene.ForegroundHigh.TempSelectionTiles.Count - EditorScene.ForegroundHigh.TempSelectionDeselectTiles.Count;
+                selectionSizeLabel.Content = string.Format("Selected Tile Count: {0} ", tileCount);
+            }
+
+        }
+
         private void UpdateUI()
         {
             editToolStripMenuItem.IsEnabled = false;
@@ -304,17 +353,21 @@ namespace ManiacEDv2
             toolsToolStripMenuItem.IsEnabled = false;
             helpToolStripMenuItem.IsEnabled = false;
 
-            LayerToolbar.IsEnabled = false;
+            LayerToolbar.IsEnabled = true;
             foreach (var control in MainToolbarButtons.Items)
             {
-                if (control is System.Windows.Controls.Button)
+                if (isNotAnyOfTheseControls(control))
                 {
-                    (control as System.Windows.Controls.Button).IsEnabled = false;
+                    if (control is System.Windows.Controls.Button)
+                    {
+                        (control as System.Windows.Controls.Button).IsEnabled = false;
+                    }
+                    if (control is System.Windows.Controls.Primitives.ToggleButton)
+                    {
+                        (control as System.Windows.Controls.Primitives.ToggleButton).IsEnabled = false;
+                    }
                 }
-                if (control is System.Windows.Controls.Primitives.ToggleButton && !(control.Equals(ShowCollisionAButton) || control.Equals(ShowCollisionBButton)))
-                {
-                    (control as System.Windows.Controls.Primitives.ToggleButton).IsEnabled = false;
-                }
+
 
             }
             LeftToolbarToolbox.IsEnabled = false;
@@ -322,7 +375,22 @@ namespace ManiacEDv2
 
             StatusBar1.IsEnabled = false;
             StatusBar2.IsEnabled = false;
+
+            bool isNotAnyOfTheseControls(object control)
+            {
+                if (control.Equals(ShowCollisionAButton)) return false;
+                else if (control.Equals(ShowCollisionBButton)) return false;
+                else if (control.Equals(PointerToolButton)) return false;
+                else if (control.Equals(SelectToolButton)) return false;
+                else if (control.Equals(DrawToolButton)) return false;
+                else if (control.Equals(UndoButton)) return false;
+                else if (control.Equals(RedoButton)) return false;
+                else if (control is EditLayerToggleButton) return false;
+                else return true;
+            }
         }
+
+
 
         private void EnterDemoMode()
         {
@@ -337,17 +405,32 @@ namespace ManiacEDv2
 
         private void OpenMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            string scene = @"D:\Users\CarJem\Documents\Mania Modding\mods\LHPZ - Dev\Data\Stages\HPZ\Scene1.bin";
-            OpenFileDialog ofd = new OpenFileDialog()
+            bool demoStart = true;
+            string demoScene = @"D:\Users\CarJem\Documents\Mania Modding\mods\LHPZ - Dev\Data\Stages\HPZ\Scene1.bin";
+            if (!demoStart)
             {
-                Filter = "Scene File | *.bin",
-                InitialDirectory = System.IO.Path.GetDirectoryName(scene)
-            };
-            if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                GetSceneFiles(ofd.FileName);
-                EnterDemoMode();
+                OpenFileDialog ofd = new OpenFileDialog()
+                {
+                    Filter = "Scene File | *.bin",
+                    //InitialDirectory = System.IO.Path.GetDirectoryName()
+                };
+                if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    Load(ofd.FileName);
+                }
             }
+            else
+            {
+                Load(demoScene);
+            }
+
+            void Load(string scene)
+            {
+                GetSceneFiles(scene);
+                EnterDemoMode();
+                UpdateScrollView();
+            }
+
         }
 
         private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
@@ -388,6 +471,22 @@ namespace ManiacEDv2
                 UpdateCollisionProprtiesAndControls(false);
             }
 
+        }
+
+        #endregion
+
+        #region Undo + Redo Button Events
+
+        private void UndoButton_Click(object sender, RoutedEventArgs e)
+        {
+            var ed = this;
+            Interfaces.UndoRedo.EditorUndo(ref ed);
+        }
+
+        private void RedoButton_Click(object sender, RoutedEventArgs e)
+        {
+            var ed = this;
+            Interfaces.UndoRedo.EditorRedo(ref ed);
         }
 
         #endregion

@@ -855,8 +855,8 @@
                         </Button.Content>
                     </Button>
                     <Separator/>
-                    <Button x:Name="UndoButton" Width="32" Margin="0,0,0,0" Padding="0,0,0,0" Tag="Undo {0} (Ctrl + Z)" Content="{StaticResource UndoIcon}" Style="{StaticResource DisabledState2}"></Button>
-                    <Button x:Name="RedoButton" Width="32"   Margin="0,0,0,0" Padding="0,0,0,0" Tag="Redo {0} (Ctrl + Y)" Content="{StaticResource RedoIcon}" Style="{StaticResource DisabledState2}"></Button>
+                    <Button x:Name="UndoButton" Width="32" Margin="0,0,0,0" Padding="0,0,0,0" Tag="Undo {0} (Ctrl + Z)" Content="{StaticResource UndoIcon}" Style="{StaticResource DisabledState2}" Click="UndoButton_Click"></Button>
+                    <Button x:Name="RedoButton" Width="32"   Margin="0,0,0,0" Padding="0,0,0,0" Tag="Redo {0} (Ctrl + Y)" Content="{StaticResource RedoIcon}" Style="{StaticResource DisabledState2}" Click="RedoButton_Click"></Button>
                     <Separator/>
                     <Button x:Name="ReloadButton" Width="32" Margin="0,0,0,0" Padding="0,0,0,0" Content="{StaticResource Refresh}" Style="{StaticResource DisabledState2}"></Button>
                     <Separator/>
@@ -906,7 +906,7 @@
                         </Style>
                     </ToolBar.Resources>
                 </ToolBar>
-                <ToolBar x:Name="LayerToolbar" Band="1" BandIndex="0" Background="{StaticResource NormalBackground}" Foreground="{StaticResource NormalText}" Margin="0,0,-4,0" >
+                <ToolBar Band="1" Name="LayerToolbar" BandIndex="0" Height="35" Background="{StaticResource NormalBackground}" Foreground="{StaticResource NormalText}" Margin="0,0,-4,0" >
                     <Grid MinWidth="50" MaxWidth="90" HorizontalAlignment="Left">
                         <Grid x:Name="LayerHint" Grid.Row="1" Margin="0,0,5,0" VerticalAlignment="Center">
                             <Grid.RowDefinitions>
@@ -915,36 +915,9 @@
                             <TextBlock x:Name="LayerLabel" Foreground="{StaticResource NormalText}" Grid.Row="0" Text="Layers:"/>
                         </Grid>
                     </Grid>
+                    <Separator x:Name="ViewLayerListStart" Margin="0,2"/>
+                    <Separator Name="EditLayerListStart" Margin="0,2"/>
                     <Separator Margin="0,2"/>
-                    <ToggleButton x:Name="ShowFGLower" Background="Transparent" Foreground="{StaticResource NormalText}" Content="FG Lower" Style="{DynamicResource EditLayerFlat}"/>
-                    <ToggleButton x:Name="ShowFGLow" Background="Transparent" Foreground="{StaticResource NormalText}" Content="FG Low" Style="{DynamicResource EditLayerFlat}"/>
-                    <ToggleButton x:Name="ShowFGHigh" Background="Transparent" Foreground="{StaticResource NormalText}" Content="FG High" Style="{DynamicResource EditLayerFlat}"/>
-                    <ToggleButton x:Name="ShowFGHigher" Background="Transparent" Foreground="{StaticResource NormalText}" Content="FG Higher" Style="{DynamicResource EditLayerFlat}"/>
-                    <ToggleButton x:Name="ShowEntities" Background="Transparent" Foreground="{StaticResource NormalText}" Content="Entities" Style="{DynamicResource EditLayerFlat}"/>
-                    <ToggleButton x:Name="ShowAnimations" Foreground="{StaticResource NormalText}" Content="Animations" Background="Transparent" Style="{DynamicResource EditLayerFlat}" IsEnabled="False"/>
-                    <Button BorderThickness="0" Width="34" Margin="0,0,0,0" Padding="0,0,0,0" Style="{DynamicResource RemoveMouseOverEffectType2}" VerticalAlignment="Center">
-                        <Button.Content>
-                            <StackPanel Background="{StaticResource NormalBackground}" Height="32" Width="32">
-                                <Menu Background="{StaticResource NormalBackground}" Padding="0" BorderThickness="0" Margin="1" Height="30">
-                                    <MenuItem  x:Name="animationsSplitButton_Dropdown" Header="{StaticResource DownArrow4}" Padding="4,-3,3,0" Height="30">
-                                        <MenuItem x:Name="movingPlatformsObjectsToolStripMenuItem" Header="Moving Platforms / Objects"></MenuItem>
-                                        <MenuItem x:Name="spriteFramesToolStripMenuItem" Header="Sprite Frames"></MenuItem>
-                                        <MenuItem x:Name="parallaxAnimationMenuItem" Header="Parallax Animation (Will Disable Editing)"></MenuItem>
-                                    </MenuItem>
-                                </Menu>
-                            </StackPanel>
-                        </Button.Content>
-                    </Button>
-
-                    <Separator Margin="0,2"/>
-                    <Separator x:Name="extraViewLayersSeperator" Margin="0,2" Visibility="Collapsed"/>
-                    <local:EditLayerToggleButton IsLayerOptionsEnabled="True" x:Name="EditFGLower" Text="FG Lower" TextForeground="Red"></local:EditLayerToggleButton>
-                    <local:EditLayerToggleButton IsLayerOptionsEnabled="True" x:Name="EditFGLow" Text="FG Low" TextForeground="Red"></local:EditLayerToggleButton>
-                    <local:EditLayerToggleButton IsLayerOptionsEnabled="True" x:Name="EditFGHigh" Text="FG High" TextForeground="Red"></local:EditLayerToggleButton>
-                    <local:EditLayerToggleButton IsLayerOptionsEnabled="True" x:Name="EditFGHigher" Text="FG Higher" TextForeground="Red"></local:EditLayerToggleButton>
-                    <local:EditLayerToggleButton x:Name="EditEntities" Text="Entities" TextForeground="Red"/>
-
-
                     <ToolBar.Resources>
                         <Style x:Key="ToolBarMainPanelBorderStyle" TargetType="{x:Type Border}">
                             <Setter Property="CornerRadius" Value="0,0,0,0"/>
