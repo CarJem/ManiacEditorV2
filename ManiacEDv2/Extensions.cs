@@ -39,6 +39,12 @@ namespace ManiacEDv2
             return "Unable to get memory usage";
         }
 
+        /// <summary>Blends the specified colors together.</summary>
+        /// <param name="color">Color to blend onto the background color.</param>
+        /// <param name="backColor">Color to blend the other color onto.</param>
+        /// <param name="amount">How much of <paramref name="color"/> to keep,
+        /// “on top of” <paramref name="backColor"/>.</param>
+        /// <returns>The blended colors.</returns>
         public static System.Drawing.Color Blend(this System.Drawing.Color color, System.Drawing.Color backcolor, double amount)
         {
             byte r = (byte)((color.R * amount) + backcolor.R * (1 - amount));

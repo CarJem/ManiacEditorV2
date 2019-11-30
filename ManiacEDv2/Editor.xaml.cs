@@ -333,11 +333,11 @@ namespace ManiacEDv2
 
         #region UI Updating Methods
 
-        public void UpdateClickLabels()
+        public void UpdateSelectedTilesLabels()
         {
             if (EditorScene != null)
             {
-                int tileCount = EditorScene.ForegroundHigh.SelectedTiles.Count + EditorScene.ForegroundHigh.TempSelectionTiles.Count - EditorScene.ForegroundHigh.TempSelectionDeselectTiles.Count;
+                int tileCount = EditorScene.EditLayer?.SelectedTiles.Count ?? 0 + EditorScene.EditLayer?.TempSelectionTiles.Count ?? 0 - EditorScene.EditLayer?.TempSelectionDeselectTiles.Count ?? 0;
                 selectionSizeLabel.Content = string.Format("Selected Tile Count: {0} ", tileCount);
             }
 

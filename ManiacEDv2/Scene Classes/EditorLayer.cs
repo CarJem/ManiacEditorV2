@@ -98,7 +98,7 @@ namespace ManiacEDv2
             isDragOver = true;
             DragOver(point, value);
             InvalidateChunks();
-            //RefreshTileCount();
+            
         }
         public void DragOver(Point point, ushort value)
         {
@@ -108,7 +108,7 @@ namespace ManiacEDv2
             SelectedTiles.Add(new Tile(point, Layer.Tiles[point.Y][point.X]));
             SelectedTiles.Values[point] = value;
             InvalidateChunks();
-            //RefreshTileCount();
+            
         }
         public void PostDragOver(bool remove)
         {
@@ -118,11 +118,11 @@ namespace ManiacEDv2
                 {
                     SelectedTiles.Clear();
                     SelectedTiles.Values.Clear();
-                    //RefreshTileCount();
+                    
                 }
                 isDragOver = false;
                 InvalidateChunks();
-                //RefreshTileCount();
+                
             }
         }
         #endregion
@@ -149,7 +149,7 @@ namespace ManiacEDv2
             }
 
             SelectedTiles.Values.Clear();
-            //RefreshTileCount();
+            
 
         }
         private void DetachSelected()
@@ -162,7 +162,7 @@ namespace ManiacEDv2
                     SelectedTiles.Values[point.Point] = Layer.Tiles[point.Y][point.X];
                     RemoveTile(point.Point);
                     InvalidateChunks();
-                    //RefreshTileCount();
+                    
                 }
             }
         }
@@ -191,13 +191,13 @@ namespace ManiacEDv2
                     Deselect();
                     // Create new actions group
                     Actions.Add(new ActionDummy());
-                    //RefreshTileCount();
+                    
                 }
                 SelectionMoved = true;
                 SelectedTiles.Values.Clear();
                 SelectedTiles.AddPoints(newPoints);
                 InvalidateChunks();
-                //RefreshTileCount();
+                
             }
 
             void Standard()
@@ -211,7 +211,7 @@ namespace ManiacEDv2
                 SelectedTiles.Values.Clear();
                 SelectedTiles.AddPoints(newPoints);
                 InvalidateChunks();
-                //RefreshTileCount();
+                
             }
         }
         public void FlipPropertySelected(FlipDirection direction, bool flipIndividually = false)
@@ -333,7 +333,7 @@ namespace ManiacEDv2
                     if (Layer.Tiles[y][x] != 0xffff)
                     {
                         SelectedTiles.Add(new Tile(new Point(x, y), Layer.Tiles[y][x]));
-                        //RefreshTileCount();
+                        
                     }
                     /*
                     else if (Layer.Tiles[y][x] == 0xffff && EditorInstance.UIModes.CopyAir)
@@ -357,31 +357,28 @@ namespace ManiacEDv2
                 {
                     // Deselect
                     DeselectPoint(point);
-                    //RefreshTileCount();
+                    
                 }
                 else if (this.Layer.Tiles[point.Y][point.X] != 0xffff /*|| EditorInstance.UIModes.CopyAir*/)
                 {
                     // Just add the point
                     SelectedTiles.Add(new Tile(point, this.Layer.Tiles[point.Y][point.X]));
-                    //RefreshTileCount();
+                    
                 }
             }
         }
         public void TempSelection(Rectangle area, bool deselectIfSelected)
         {
-            TempSelectionTiles.Clear();
-            TempSelectionTiles.Values.Clear();
-            TempSelectionDeselectTiles.Clear();
-            TempSelectionDeselectTiles.Values.Clear();
+            ResetValues();
             bool TempSelectionDeselect = deselectIfSelected;
             for (int y = Math.Max(area.Y / TILE_SIZE, 0); y < Math.Min(DivideRoundUp(area.Y + area.Height, TILE_SIZE), Layer.Height); ++y)
             {
                 for (int x = Math.Max(area.X / TILE_SIZE, 0); x < Math.Min(DivideRoundUp(area.X + area.Width, TILE_SIZE), Layer.Width); ++x)
                 {
                     var tile = new Tile(new Point(x, y), Layer.Tiles[y][x]);
+                    TempSelectionTiles.Add(tile);
                     if (SelectedTiles.Contains(new Point(x, y)))
                     {
-                        TempSelectionTiles.Add(tile);
                         if (SelectedTiles.Contains(tile.Point) && TempSelectionTiles.Contains(tile.Point))
                         {
                             TempSelectionDeselectTiles.Add(tile);
@@ -401,19 +398,19 @@ namespace ManiacEDv2
                     {
                         var point = new Point(x, y);
                         SelectedTiles.Add(new Tile(point, this.Layer.Tiles[point.Y][point.X]));
-                        //RefreshTileCount();
+                        
                     }
                     /*
                     else if (Layer.Tiles[y][x] == 0xffff && EditorInstance.UIModes.CopyAir)
                     {
                         var point = new Point(x, y);
                         SelectedTiles.Add(new Tile(point, this.Layer.Tiles[point.Y][point.X]));
-                        //RefreshTileCount();
+                        
                     }*/
 
                 }
             }
-            //RefreshTileCount();
+            
         }
         public void Deselect()
         {
@@ -433,6 +430,14 @@ namespace ManiacEDv2
             SelectedTiles.Clear();
             SelectedTiles.Values.Clear();
         }
+
+        public void ResetValues()
+        {
+            TempSelectionTiles.Clear();
+            TempSelectionTiles.Values.Clear();
+            TempSelectionDeselectTiles.Clear();
+            TempSelectionDeselectTiles.Values.Clear();
+        }
         public void EndTempSelection()
         {
             SelectedTiles.VerifyAll();
@@ -449,7 +454,24 @@ namespace ManiacEDv2
                 SetTile(p, SelectedTiles.Values[p]);
                 SelectedTiles.Values.Remove(p);
             }
-            SelectedTiles.Remove(p);
+            else SelectedTiles.Remove(p);
+
+            if (TempSelectionTiles.Values.ContainsKey(p))
+            {
+                // Or else it wasn't moved at all
+                SetTile(p, SelectedTiles.Values[p]);
+                TempSelectionTiles.Values.Remove(p);
+            }
+            else TempSelectionTiles.Remove(p);
+
+            if (TempSelectionDeselectTiles.Values.ContainsKey(p))
+            {
+                // Or else it wasn't moved at all
+                SetTile(p, TempSelectionDeselectTiles.Values[p]);
+                TempSelectionDeselectTiles.Values.Remove(p);
+            }
+            else TempSelectionDeselectTiles.Remove(p);
+
         }
 
         #endregion
@@ -531,8 +553,9 @@ namespace ManiacEDv2
                             for (int tx = rect.X; tx < rect.X + rect.Width; ++tx)
                             {
                                 Point point = new Point(tx, ty);
-                                bool tileSelected = SelectedTiles.Values.ContainsKey(point) || TempSelectionTiles.Values.ContainsKey(point) || TempSelectionDeselectTiles.Values.ContainsKey(point);
-                                DrawTile(g, GetTileToDraw(point), tx - rect.X, ty - rect.Y, tileSelected);
+                                ushort tile = GetTileToDraw(point);
+                                bool tileSelected = (SelectedTiles.Values.ContainsKey(point) || TempSelectionTiles.Values.ContainsKey(point)) && !TempSelectionDeselectTiles.Values.ContainsKey(point);
+                                if(tile != 0xFFFF) DrawTile(g, tile, tx - rect.X, ty - rect.Y, tileSelected);
                                 if (tileSelected) hasBeenSelected = true;
 
                             }
@@ -552,8 +575,6 @@ namespace ManiacEDv2
 
                 return ChunkMap[y][x].Texture;
             }
-
-
 
 
         }
@@ -585,7 +606,7 @@ namespace ManiacEDv2
                 System.Drawing.Color LRDSolid = System.Drawing.Color.Yellow;
                 System.Drawing.Color TopOnlySolid = System.Drawing.Color.Red;
 
-                g.DrawImage(Parent.EditorTiles.Image.GetBitmap(new Rectangle(0, TileIndex * TILE_SIZE, TILE_SIZE, TILE_SIZE), flipX, flipY), new Rectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE));
+                g.DrawImage(Parent.EditorTiles.Image.GetBitmap(new Rectangle(0, TileIndex * TILE_SIZE, TILE_SIZE, TILE_SIZE), flipX, flipY, isSelected), new Rectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE));
 
                 if (Parent.Parent.ShowCollisionA)
                 {
@@ -945,7 +966,7 @@ namespace ManiacEDv2
         private void RemoveTile(Point point)
         {
             SetTile(point, 0xffff);
-            //RefreshTileCount();
+            
         }
 
         #endregion

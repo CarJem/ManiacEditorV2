@@ -30,7 +30,7 @@ namespace ManiacEDv2
         public List<EditLayerToggleButton> EditLayerButtons;
 
 
-        public EditorLayer EditLayer;
+        public EditorLayer EditLayer { get; set; }
 
         public EditorLayer LowDetails
         {
@@ -171,12 +171,20 @@ namespace ManiacEDv2
                 {
                     if (!item.Equals((sender as EditLayerToggleButton))) item.IsCheckedN = false;
                 }
+                if (EditLayer != null) CloseEditLayer();
                 EditLayer = this.Layers.Where(x => x.Name == (sender as EditLayerToggleButton).LayerName).FirstOrDefault();
             }
             else
             {
+                if (EditLayer != null) CloseEditLayer();
                 EditLayer = null;
             }
+        }
+
+        private void CloseEditLayer()
+        {
+            var self = this;
+            Interfaces.Layer.Deselect(ref self, EditLayer);
         }
 
         #endregion

@@ -18,7 +18,19 @@ namespace ManiacEDv2.Actions
             }
         }
 
-        public string Description => $"{actions.Count} actions";
+        public string Description => GetDiscription();
+
+        public string GetDiscription()
+        {
+            return $"{actions.Count} actions";
+            /*
+            string disc = "";
+            foreach (var action in actions)
+            {
+                disc += action.Description + Environment.NewLine;
+            }
+            return disc;*/
+        }
 
         public ActionsGroup()
         {

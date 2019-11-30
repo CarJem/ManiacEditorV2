@@ -83,7 +83,7 @@ namespace ManiacEDv2.Interfaces
 
         public static void MouseUp(ref Editor ed, MouseEventArgs e)
         {
-            ed.UpdateClickLabels();
+            ed.UpdateSelectedTilesLabels();
 
             if (e.Button == MouseButtons.Left)
             {
@@ -135,7 +135,7 @@ namespace ManiacEDv2.Interfaces
             ClickPoint = e.Location;
             RegionStart = e.Location;
 
-            ed.UpdateClickLabels();
+            ed.UpdateSelectedTilesLabels();
             GraphicPanel_MouseDown(ref ed, e);
         }
 
@@ -156,7 +156,7 @@ namespace ManiacEDv2.Interfaces
             }
 
             GraphicPanel_MouseMove(ref ed, e);
-            ed.UpdateClickLabels();
+            ed.UpdateSelectedTilesLabels();
         }
 
         private void KeyDown(ref Editor ed, KeyEventArgs e)
@@ -320,7 +320,7 @@ namespace ManiacEDv2.Interfaces
                 GraphicPanel_MouseMove_EdgeScroll(ref sender, e.Location);
             }
 
-            sender.UpdateClickLabels();
+            sender.UpdateSelectedTilesLabels();
             sender.GraphicsHostControl.GraphicPanel.Render();
         }
         public static void MouseMove_SelectMoveRegionAdjust(ref Editor ed, bool chunkAlign = false)

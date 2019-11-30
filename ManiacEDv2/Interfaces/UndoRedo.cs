@@ -20,7 +20,7 @@ namespace ManiacEDv2.Interfaces
                 //if (IsTilesEdit())
                 //{
                     // Deselect to apply the changes
-                    Interfaces.Layer.Deselect(ref Instance.EditorScene, Instance.EditorScene.ForegroundHigh);
+                    Interfaces.Layer.Deselect(ref Instance.EditorScene, Instance.EditorScene.EditLayer);
                 //}
                 //else if (IsEntitiesEdit())
                 //{
@@ -62,7 +62,7 @@ namespace ManiacEDv2.Interfaces
 
         public static void UpdateLayerStack(ref Editor Instance)
         {
-            List<IAction> actions = Instance.EditorScene.ForegroundHigh?.Actions;
+            List<IAction> actions = Instance.EditorScene.EditLayer?.Actions;
             if (actions.Count > 0) RedoStack.Clear();
             while (actions.Count > 0)
             {

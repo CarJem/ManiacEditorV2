@@ -11,9 +11,11 @@ namespace ManiacEDv2
     public class GIF : IDisposable
     {
         Bitmap _bitmap;
+        Bitmap _bitmap_selected;
         string _bitmapFilename;
 
         Dictionary<Tuple<Rectangle, bool, bool>, Bitmap> _bitmapCache = new Dictionary<Tuple<Rectangle, bool, bool>, Bitmap>();
+        Dictionary<Tuple<Rectangle, bool, bool>, Bitmap> _bitmap_selected_Cache = new Dictionary<Tuple<Rectangle, bool, bool>, Bitmap>();
 
         public GIF(string filename, string encoreColors = null)
         {
@@ -23,30 +25,62 @@ namespace ManiacEDv2
                 throw new FileNotFoundException("The GIF file was not found.", filename);
             }
             _bitmap = new Bitmap(filename);
+            _bitmap_selected = _bitmap.Clone(new Rectangle(0, 0, _bitmap.Width, _bitmap.Height), PixelFormat.Format32bppArgb);
 
             if (encoreColors != null)
             {
-                loadEncoreColors(encoreColors);
+                LoadEncoreColors(encoreColors);
             }
 
 
-            if (_bitmap.Palette != null && _bitmap.Palette.Entries.Length > 0)
-            {
-                _bitmap.MakeTransparent(_bitmap.Palette.Entries[0]);
-            }
-            else
-            {
-                _bitmap.MakeTransparent(SystemColor.FromArgb(0xff00ff));
-            }
+            if (_bitmap.Palette != null && _bitmap.Palette.Entries.Length > 0) _bitmap.MakeTransparent(_bitmap.Palette.Entries[0]);
+            else _bitmap.MakeTransparent(SystemColor.FromArgb(0xff00ff));
+
+            if (_bitmap_selected.Palette != null && _bitmap_selected.Palette.Entries.Length > 0) _bitmap_selected.MakeTransparent(_bitmap_selected.Palette.Entries[0]);
+            else _bitmap_selected.MakeTransparent(SystemColor.FromArgb(0xff00ff));
+
+            ColorImage(ref _bitmap_selected);
 
             // stash the filename too, so we can reload later
             _bitmapFilename = filename;
-
-            // TODO: Proper transparent (palette index 0)
-            //_bitmap.MakeTransparent(SystemColor.FromArgb(0xff00ff));
         }
 
-        private void loadEncoreColors(string encoreColors = null)
+        public GIF(Bitmap bitmap)
+        {
+            this._bitmap = new Bitmap(bitmap);
+            this._bitmap_selected = this._bitmap.Clone(new Rectangle(0, 0, _bitmap.Width, _bitmap.Height), PixelFormat.Format32bppArgb);
+            ColorImage(ref this._bitmap_selected);
+        }
+
+        public GIF(Image image)
+        {
+            this._bitmap = new Bitmap(image);
+        }
+
+        private void ColorImage(ref Bitmap pImage)
+        {
+
+            System.Drawing.Color tintColor = System.Drawing.Color.FromArgb(255, 0, 0);
+
+            for (int x = 0; x < pImage.Width; x++)
+            {
+                for (int y = 0; y < pImage.Height; y++)
+                {
+
+                    //Calculate the new color
+                    var oldColor = pImage.GetPixel(x, y);
+                    var newColor = oldColor.Blend(tintColor, 0.7);
+
+                    System.Drawing.Color newColorA = System.Drawing.Color.FromArgb(oldColor.A, newColor.R, newColor.G, newColor.B);
+                    pImage.SetPixel(x, y, newColorA);
+
+                }
+            }
+        }
+
+
+
+        private void LoadEncoreColors(string encoreColors = null)
         {
             Bitmap _bitmapEditMemory;
             _bitmapEditMemory = _bitmap.Clone(new Rectangle(0, 0, _bitmap.Width, _bitmap.Height), PixelFormat.Format8bppIndexed);
@@ -85,16 +119,6 @@ namespace ManiacEDv2
             _bitmap = _bitmapEditMemory;
         }
 
-        public GIF(Bitmap bitmap)
-        {
-            this._bitmap = new Bitmap(bitmap);
-        }
-
-        public GIF(Image image)
-        {
-            this._bitmap = new Bitmap(image);
-        }
-
         private Bitmap CropImage(Bitmap source, Rectangle section)
         {
             // An empty bitmap which will hold the cropped image
@@ -110,23 +134,50 @@ namespace ManiacEDv2
             return bmp;
         }
 
-        public Bitmap GetBitmap(Rectangle section, bool flipX = false, bool flipY = false)
+        public Bitmap GetBitmap(Rectangle section, bool flipX = false, bool flipY = false, bool isSelected = false)
         {
             Bitmap bmp;
-            if (_bitmapCache.TryGetValue(new Tuple<Rectangle, bool, bool>(section, flipX, flipY), out bmp)) return bmp;
-
-            bmp = CropImage(_bitmap, section);
-            if (flipX)
+            if (isSelected)
             {
-                bmp.RotateFlip(RotateFlipType.RotateNoneFlipX);
+                if (_bitmap_selected_Cache.TryGetValue(new Tuple<Rectangle, bool, bool>(section, flipX, flipY), out bmp)) return bmp;
+                GetSelectedBitmap();
             }
-            if (flipY)
+            else
             {
-                bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                if (_bitmapCache.TryGetValue(new Tuple<Rectangle, bool, bool>(section, flipX, flipY), out bmp)) return bmp;
+                GetNormalBitmap();
             }
-
-            _bitmapCache[new Tuple<Rectangle, bool, bool>(section, flipX, flipY)] = bmp;
             return bmp;
+
+            void GetSelectedBitmap()
+            {
+                bmp = CropImage(_bitmap_selected, section);
+                if (flipX)
+                {
+                    bmp.RotateFlip(RotateFlipType.RotateNoneFlipX);
+                }
+                if (flipY)
+                {
+                    bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                }
+
+                _bitmap_selected_Cache[new Tuple<Rectangle, bool, bool>(section, flipX, flipY)] = bmp;
+            }
+
+            void GetNormalBitmap()
+            {
+                bmp = CropImage(_bitmap, section);
+                if (flipX)
+                {
+                    bmp.RotateFlip(RotateFlipType.RotateNoneFlipX);
+                }
+                if (flipY)
+                {
+                    bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                }
+
+                _bitmapCache[new Tuple<Rectangle, bool, bool>(section, flipX, flipY)] = bmp;
+            }
         }
 
         public Bitmap ToBitmap()
@@ -151,7 +202,7 @@ namespace ManiacEDv2
 
             if (encoreColors != null)
             {
-                loadEncoreColors(encoreColors);
+                LoadEncoreColors(encoreColors);
             }
 
             if (_bitmap.Palette != null && _bitmap.Palette.Entries.Length > 0)
@@ -168,9 +219,13 @@ namespace ManiacEDv2
         private void ReleaseResources()
         {
             _bitmap.Dispose();
+            _bitmap_selected.Dispose();
             foreach (Bitmap b in _bitmapCache.Values)
                 b?.Dispose();
+            foreach (Bitmap b in _bitmap_selected_Cache.Values)
+                b?.Dispose();
             _bitmapCache.Clear();
+            _bitmap_selected_Cache.Clear();
         }
 
         public GIF Clone()

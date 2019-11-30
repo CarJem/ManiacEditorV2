@@ -72,9 +72,10 @@ namespace ManiacEDv2.Interfaces
                     }
                 }
 
-
+                scene.Parent.UpdateSelectedTilesLabels();
                 scene.Layers[index].TempSelection(new System.Drawing.Rectangle(x1, y1, x2 - x1, y2 - y1), deselectIfSelected);
                 scene.Layers[index].InvalidateChunks();
+
             }
         }
 
@@ -109,9 +110,22 @@ namespace ManiacEDv2.Interfaces
             if (layer != null)
             {
                 int index = scene.Layers.IndexOf(layer);
+                bool wasMoved = scene.Layers[index].SelectionMoved;
                 scene.Layers[index].Deselect();
-                UndoRedo.UpdateLayerStack(ref scene.Parent);
-                UndoRedo.UpdateUndoRedoButtons(ref scene.Parent);
+                if (wasMoved)
+                {
+                    UndoRedo.UpdateLayerStack(ref scene.Parent);
+                    UndoRedo.UpdateUndoRedoButtons(ref scene.Parent);
+                }
+            }
+        }
+
+
+        private static void PlaySound()
+        {
+            using (var soundPlayer = new System.Media.SoundPlayer(@"c:\Windows\Media\chimes.wav"))
+            {
+                soundPlayer.Play(); // can also use soundPlayer.PlaySync()
             }
         }
     }
